@@ -1,4 +1,5 @@
-# vkr2
+# QME-frontend
+Queue for Modeus Electives frontend
 
 ## Project setup
 ```
