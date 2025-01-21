@@ -25,13 +25,8 @@
             md="4"
             lg="3"
           >
-            <div class="course-card">
-              <div class="blue-stripe"></div>
-              <div class="course-card__content">
-                <h3 class="course-title">{{ course.name }}</h3>
-                <p class="course-description">{{ getShortDescription(course.description) }}</p>
-              </div>
-            </div>
+            <!-- Использование компонента CourseCard -->
+            <CourseCard :course="course" />
           </v-col>
         </v-row>
       </div>
@@ -40,19 +35,20 @@
     <!-- Все курсы -->
     <h2 class="section-title mt-10">Все элективные курсы</h2>
     <v-card class="filters-card pa-4 my-4">
-      <v-row>
+      <v-row class="d-flex align-center justify-center flex-wrap">
         <!-- Поиск -->
-        <v-col cols="12" sm="6" md="4">
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
           <v-text-field
             v-model="searchQuery"
             label="Поиск по названию или описанию"
             outlined
             dense
             clearable
+            style="height: 56px;"
           ></v-text-field>
         </v-col>
         <!-- Фильтр по кластеру -->
-        <v-col cols="12" sm="6" md="4">
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
           <v-select
             v-model="selectedCluster"
             :items="allClusterItems"
@@ -60,73 +56,99 @@
             outlined
             dense
             clearable
+            style="height: 56px;"
           ></v-select>
         </v-col>
         <!-- Сброс фильтров -->
-        <v-col cols="12" sm="6" md="4">
-          <v-btn color="primary" @click="resetFilters">Сбросить фильтры</v-btn>
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
+          <v-btn
+            color="primary"
+            @click="resetFilters"
+            style="width: auto; min-width: 150px; margin-left: -150px;"
+            dense
+          >
+            Сбросить фильтры
+          </v-btn>
         </v-col>
       </v-row>
     </v-card>
 
+    <!-- Элективные курсы с пагинацией -->
     <v-row>
       <v-col
-        v-for="course in filteredCourses"
+        v-for="course in paginatedCourses"
         :key="course.id"
         cols="12"
         sm="6"
         md="4"
         lg="3"
       >
-        <div class="course-card">
-          <div class="blue-stripe"></div>
-          <div class="course-card__content">
-            <h3 class="course-title">{{ course.name }}</h3>
-            <p class="course-description">{{ getShortDescription(course.description) }}</p>
-          </div>
-        </div>
+        <!-- Использование компонента CourseCard -->
+        <CourseCard :course="course" />
       </v-col>
     </v-row>
+
+    <!-- Новая Пагинация с Vuetify -->
+    <div class="pagination">
+      <v-pagination
+        v-model="currentPage"
+        :length="totalPages"
+        total-visible="7"
+        @input="changePage"
+        color="primary"
+      ></v-pagination>
+      <span class="page-info">Страница {{ currentPage }} из {{ totalPages }}</span>
+    </div>
   </v-container>
 </template>
 
 <script>
-import coursesData from './data/courses_clusters.json'; // Убедитесь, что путь верный
+import { ref, computed, watch } from 'vue';
+import coursesData from './data/courses_clusters.json';
+import CourseCard from '@/components/CourseCard.vue'; // Импорт нового компонента
 
 export default {
   name: 'UserView',
-  data() {
-    return {
-      recommendedClusters: [],
-      searchQuery: '',
-      selectedCluster: null,
-      clusters: [], // Список всех кластеров из курсов
-      courses: coursesData, // Все курсы
-    };
+  components: {
+    CourseCard, // Регистрация компонента
   },
-  computed: {
-    // Список всех уникальных кластеров для фильтрации
-    allClusterItems() {
-      return Array.from(new Set(this.courses.map(course => course.cluster)));
-    },
-    // Фильтрация всех курсов на основе поиска и выбранного кластера
-    filteredCourses() {
-      return this.courses.filter(course => {
-        const text = (course.name + ' ' + (course.description || '')).toLowerCase();
-        const matchSearch = this.searchQuery
-          ? text.includes(this.searchQuery.toLowerCase())
-          : true;
-        const matchCluster = this.selectedCluster
-          ? course.cluster === this.selectedCluster
-          : true;
-        return matchSearch && matchCluster;
+  setup() {
+    const recommendedClusters = ref([]);
+    const searchQuery = ref('');
+    const selectedCluster = ref(null);
+    const courses = ref(coursesData);
+
+    const currentPage = ref(1);
+    const itemsPerPage = ref(8);
+
+    const allClusterItems = computed(() => {
+      return Array.from(new Set(courses.value.map(course => course.cluster)));
+    });
+
+    const filteredCourses = computed(() => {
+      return courses.value.filter(course => {
+        const matchesSearch =
+          !searchQuery.value ||
+          (course.name + ' ' + (course.description || '')).toLowerCase().includes(searchQuery.value.toLowerCase());
+        const matchesCluster = !selectedCluster.value || course.cluster === selectedCluster.value;
+        return matchesSearch && matchesCluster;
       });
-    },
-    // Группировка рекомендованных курсов по кластеру и ограничение до 5 курсов
-    recommendedByCluster() {
+    });
+
+    const paginatedCourses = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return filteredCourses.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(filteredCourses.value.length / itemsPerPage.value);
+    });
+
+    const recommendedByCluster = computed(() => {
       const groups = {};
-      this.courses.forEach(course => {
-        if (this.recommendedClusters.includes(course.cluster)) {
+      courses.value.forEach(course => {
+        if (recommendedClusters.value.includes(course.cluster)) {
           if (!groups[course.cluster]) {
             groups[course.cluster] = [];
           }
@@ -136,36 +158,60 @@ export default {
         }
       });
       return groups;
-    },
-  },
-  created() {
-    // Загрузка рекомендованных кластеров из localStorage
-    const savedClusters = JSON.parse(localStorage.getItem('recommendedClusters') || '[]');
-    this.recommendedClusters = savedClusters;
+    });
 
-    // Получение списка всех кластеров из курсов
-    const allClusters = this.courses.map(course => course.cluster);
-    this.clusters = Array.from(new Set(allClusters));
-  },
-  methods: {
-    getShortDescription(description) {
-      const maxLength = 100;
-      if (!description) return '';
-      if (description.length <= maxLength) return description;
-      return description.slice(0, maxLength) + '...';
-    },
-    resetFilters() {
-      this.searchQuery = '';
-      this.selectedCluster = null;
+    function changePage(page) {
+      if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
+        // Прокрутка к началу списка курсов при смене страницы
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      }
     }
-  }
+
+    function resetFilters() {
+      searchQuery.value = '';
+      selectedCluster.value = null;
+    }
+
+    const savedClusters = JSON.parse(localStorage.getItem('recommendedClusters') || '[]');
+    if (Array.isArray(savedClusters)) {
+      recommendedClusters.value = savedClusters;
+    }
+
+    // Наблюдатели для сброса пагинации
+    watch([searchQuery, selectedCluster], () => {
+      currentPage.value = 1; // Сбрасываем на первую страницу
+    });
+
+    return {
+      recommendedClusters,
+      searchQuery,
+      selectedCluster,
+      courses,
+      currentPage,
+      itemsPerPage,
+      allClusterItems,
+      filteredCourses,
+      paginatedCourses,
+      totalPages,
+      recommendedByCluster,
+      resetFilters,
+      changePage,
+    };
+  },
 };
 </script>
 
 <style scoped>
 .recommend-container {
   font-family: 'Montserrat', sans-serif;
-  padding-top: 30px;
+  padding: 30px 15px; /* Внутренние отступы сверху и по бокам */
+  margin: 0 auto; /* Центровка */
+  max-width: 1200px; /* Ограничение ширины страницы */
+  box-sizing: border-box; /* Учет отступов в ширине */
 }
 
 .page-title {
@@ -197,54 +243,19 @@ export default {
   margin-bottom: 20px;
 }
 
-.course-card {
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e0e0e0;
-  background: #fff;
-  margin-bottom: 20px;
-  position: relative;
-  transition: box-shadow 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.course-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transform: translateY(-2px);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-/* Синяя полоска вместо дублированного текста */
-.blue-stripe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 5px;
-  width: 100%;
-  background-color: #6ba5e2; /* Синий цвет */
-}
-
-.course-card__content {
-  padding: 16px;
-  margin-top: 10px; /* Отступ под полоской */
-}
-
-.course-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-top: 0;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.course-description {
-  font-weight: 300;
-  margin: 0;
-  color: #555;
-  line-height: 1.4em;
-}
-
 .filters-card {
   border-radius: 12px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.page-info {
+  font-weight: 500;
 }
 </style>

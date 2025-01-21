@@ -9,8 +9,7 @@
     <!-- Навигационные кнопки рядом с логотипом -->
     <div class="nav-buttons">
       <v-btn text :to="{ path: '/' }">ГЛАВНАЯ</v-btn>
-      <v-btn text :to="{ path: '/courses' }">ЭЛЕКТИВНЫЕ КУРСЫ</v-btn>
-      <v-btn text :to="{ path: '/chat' }">ЧАТ</v-btn>
+      <v-btn text :to="{ path: '/courses' }">ЗАЯВКИ</v-btn>
     </div>
 
     <!-- Пробел, отодвигающий аватар вправо -->
