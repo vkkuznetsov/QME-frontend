@@ -1,5 +1,5 @@
 <template>
-   <v-app>
+  <v-app class="app-background">
     <v-main>
       <user-header v-if="showUserHeader" />
       <admin-header v-else-if="showAdminHeader" />
@@ -47,5 +47,8 @@ export default {
 </script>
 
 <style>
-
+.app-background {
+  background-color: #f8f8f8;
+  min-height: 100vh;
+}
 </style>

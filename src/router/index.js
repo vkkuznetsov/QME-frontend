@@ -7,6 +7,8 @@ import AdminView from '../views/AdminView.vue';
 import AdminSettingsView from '../views/AdminSettingsView.vue';
 import UserProfileView from '../views/UserProfileView.vue';
 import CourseDetail from '../views/CourseDetail.vue';
+import RequestView from '../views/RequestView.vue';
+
 
 const routes = [
     {
@@ -50,6 +52,13 @@ const routes = [
         name: 'CourseDetail',
         component: CourseDetail,
         props: true,
+        meta: { requiresAuth: true, role: 'user' },
+      },
+      {
+        path: '/requests',
+        name: 'RequestView',
+        component: RequestView,
+        meta: {requiresAuth: true, role: 'user'}
       }
 ];
 

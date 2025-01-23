@@ -6,6 +6,11 @@ import { loadFonts } from './plugins/webfontloader'
 
 loadFonts()
 
+// Импорт мока
+if (process.env.NODE_ENV === 'development') {
+  require('./mocks/axiosMock');
+}
+
 createApp(App)
   .use(router)
   .use(vuetify)
