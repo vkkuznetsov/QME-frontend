@@ -1,389 +1,392 @@
 <template>
-    <v-container fluid class="requests-container">
-      <v-row>
-        <!-- ЛЕВАЯ КОЛОНКА: Список заявок + визуализация -->
-        <v-col cols="12" md="6">
-          <v-card class="pa-4 mb-4 custom-shadow">
+  <v-container fluid class="requests-container">
+    <v-row>
+      <v-col cols="12">
+        <v-card class="pa-4 mb-4 custom-shadow main-request-card">
+          <div class="header-section justify-space-between" style="text-align: center;">
             <h2 class="requests-title">Мои заявки на перезапись</h2>
-  
-            <div v-if="loadingRequests" class="text-center my-4">
-              <v-progress-circular indeterminate color="primary" />
+          </div>
+
+          <!-- Индикатор загрузки / Ошибка -->
+          <div v-if="loadingRequests" class="text-center my-4">
+            <v-progress-circular indeterminate color="primary" />
+          </div>
+          <div v-else-if="requestsError" class="text-center my-4">
+            <v-alert type="error" dismissible>{{ requestsError }}</v-alert>
+          </div>
+          <div v-else>
+            <!-- Если нет заявок вообще -->
+            <div v-if="userRequests.length === 0" class="no-requests-text">
+              <p class="text-center">У вас нет заявок на перезапись</p>
             </div>
-            <div v-else-if="requestsError" class="text-center my-4">
-              <v-alert type="error" dismissible>{{ requestsError }}</v-alert>
-            </div>
+            <!-- Иначе отображаем секции по sourceElectiveId -->
             <div v-else>
-              <!-- Визуализация заявок -->
-              <div v-if="userRequests.length > 0" class="mb-4">
-                <h4 class="mt-2">Статистика заявок по статусам</h4>
-                <v-sparkline
-                  :value="requestsBarData"
-                  type="bar"
-                  height="60"
-                  :color="requestsBarColors"
-                ></v-sparkline>
-                <div class="legend mt-2">
-                  <span
-                    v-for="(label, index) in statusLabels"
-                    :key="index"
-                    class="legend-item"
+              <div
+                v-for="(group, sourceElectiveId) in groupsData"
+                :key="sourceElectiveId"
+                class="source-section mb-8"
+              >
+                <!-- Заголовок для каждой группы -->
+                <div class="group-header d-flex align-center mb-3">
+                  <v-icon color="primary" class="mr-2" size="24"
+                    >mdi-book-outline</v-icon
                   >
-                    <v-avatar size="14" class="mr-1" :color="requestsBarColors[index]"></v-avatar>
-                    {{ label }} ({{ requestsBarData[index] }})
-                  </span>
+                  <h3 class="source-title">{{ group.name }}</h3>
                 </div>
-              </div>
-  
-              <!-- Список заявок -->
-              <div v-if="userRequests && userRequests.length > 0">
-                <v-card
-                  v-for="(req, index) in userRequests"
-                  :key="req.id || index"
-                  class="pa-3 mb-3"
-                  outlined
-                >
-                  <p><strong>Электив:</strong> {{ req.electiveName }}</p>
-                  <p><strong>Выбранные группы:</strong></p>
-                  <ul>
-                    <li v-for="(gr, idx2) in req.selectedGroups" :key="idx2">
-                      {{ gr.type }} — {{ gr.name }}
-                    </li>
-                  </ul>
-                  <div class="d-flex align-center mt-2">
-                    <strong class="mr-2">Статус:</strong>
-                    <!-- Цветовая метка статуса (chip) -->
-                    <v-chip
-                      :color="statusColor(req.status)"
-                      text-color="white"
-                      small
+
+                <!-- Сетка заявок -->
+                <v-row class="dnd-list" dense>
+                  <v-col
+                    v-for="(req, index) in group.requests"
+                    :key="req.id"
+                    cols="12"
+                    md="4"
+                    lg="3"
+                    class="d-flex"
+                  >
+                    <!-- DnD оболочка -->
+                    <div
+                      class="request-card-wrapper flex-grow-1"
+                      :class="{
+                        'drop-target': index === dragOverIndex[sourceElectiveId],
+                        'rejected': req.status === 'Отклонено',
+                      }"
+                      :draggable="isDraggable(req)"
+                      @dragstart="onDragStart($event, sourceElectiveId, index)"
+                      @dragover.prevent="onDragOver($event, sourceElectiveId, index)"
+                      @dragenter.prevent="onDragEnter($event, sourceElectiveId, index)"
+                      @dragleave="onDragLeave($event, sourceElectiveId, index)"
+                      @drop="onDrop($event, sourceElectiveId, index)"
+                      @dragend="onDragEnd($event, sourceElectiveId)"
                     >
-                      {{ req.status }}
-                    </v-chip>
-                  </div>
-                </v-card>
-              </div>
-              <div v-else>
-                <p class="text-center">У вас нет заявок на перезапись</p>
-              </div>
-            </div>
-          </v-card>
-        </v-col>
-  
-        <!-- ПРАВАЯ КОЛОНКА: Форма для новой заявки -->
-        <v-col cols="12" md="6">
-          <v-card class="pa-4 custom-shadow">
-            <h2 class="requests-title">Подать новую заявку</h2>
-  
-            <div v-if="loadingCourses" class="text-center my-4">
-              <v-progress-circular indeterminate color="primary" />
-            </div>
-            <div v-else-if="coursesError" class="text-center my-4">
-              <v-alert type="error" dismissible>{{ coursesError }}</v-alert>
-            </div>
-            <div v-else>
-              <!-- Выбор электива -->
-              <v-select
-                v-model="selectedElective"
-                :items="formattedElectives"
-                item-text="name"
-                item-value="id"
-                label="Выберите электив"
-                outlined
-                dense
-                class="mb-4"
-                @change="onElectiveChange"
-              ></v-select>
-  
-              <!-- Если студент выбрал электив, показываем выбор групп -->
-              <div v-if="selectedElectiveGroups.length > 0">
-                <div
-                  v-for="(groups, type) in groupedByType"
-                  :key="type"
-                  class="mb-4"
-                >
-                  <p style="font-weight: 600;">Выберите группу ({{ type }})</p>
-                  <v-select
-                    v-model="selectedGroupsMap[type]"
-                    :items="groups"
-                    item-text="name"
-                    item-value="id"
-                    :label="`Группа по типу: ${type}`"
-                    outlined
-                    dense
-                  ></v-select>
-                </div>
-  
-                <v-btn
-                  color="primary"
-                  @click="submitRequest"
-                  :disabled="!canSubmit"
-                >
-                  Отправить заявку
-                </v-btn>
-              </div>
-              <div v-else>
-                <p>Сначала выберите электив, чтобы отобразить его группы.</p>
+                      <!-- Используем компонент RequestCard -->
+                      <RequestCard
+                        :req="req"
+                        @request-canceled="onRequestCanceled"
+                      />
+                    </div>
+                  </v-col>
+                </v-row>
               </div>
             </div>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-  </template>
-  
-  <script>
-  import { ref, computed, onMounted } from 'vue';
-  import axios from 'axios';
-  
-  export default {
-    name: 'RequestsView',
-    setup() {
-      // Пользователь
-      const userId = ref(null);
-  
-      // Список заявок
-      const userRequests = ref([]);
-      const loadingRequests = ref(false);
-      const requestsError = ref(null);
-  
-      // Список элективов
-      const electives = ref([]);
-      const loadingCourses = ref(false);
-      const coursesError = ref(null);
-  
-      // Выбранный электив
-      const selectedElective = ref(null);
-      // Группы выбранного электива
-      const selectedElectiveGroups = ref([]);
-  
-      // Map для выбора одной группы каждого типа
-      const selectedGroupsMap = ref({});
-  
-      // --- ЗАГРУЗКА ПОЛЬЗОВАТЕЛЯ ---
-      async function loadCurrentUser() {
-        try {
-          const userEmail =
-            localStorage.getItem('userEmail') || 'stud0000257868@study.utmn.ru';
-          const resp = await axios.get('/api/users', { params: { email: userEmail } });
-          userId.value = resp.data.id;
-        } catch (err) {
-          console.error('Ошибка при загрузке пользователя', err);
-        }
-      }
-  
-      // --- ЗАГРУЗКА ЗАЯВОК ---
-      async function fetchRequests() {
-        if (!userId.value) return;
-        loadingRequests.value = true;
-        requestsError.value = null;
-        try {
-          const resp = await axios.get('/api/requests', {
-            params: { userId: userId.value },
-          });
-          userRequests.value = resp.data;
-        } catch (err) {
-          console.error(err);
-          requestsError.value = 'Не удалось загрузить ваши заявки';
-        } finally {
-          loadingRequests.value = false;
-        }
-      }
-  
-      // --- ЗАГРУЗКА КУРСОВ ---
-      async function fetchAllElectives() {
-        loadingCourses.value = true;
-        coursesError.value = null;
-        try {
-          const resp = await axios.get('/api/courses');
-          electives.value = resp.data;
-        } catch (err) {
-          console.error(err);
-          coursesError.value = 'Не удалось загрузить список элективов';
-        } finally {
-          loadingCourses.value = false;
-        }
-      }
-  
-      // --- ВЫБОР ЭЛЕКТИВА (загрузка групп) ---
-      async function onElectiveChange() {
-        selectedGroupsMap.value = {};
-        if (!selectedElective.value) {
-          selectedElectiveGroups.value = [];
-          return;
-        }
-        try {
-          const resp = await axios.get(`/api/courses/${selectedElective.value}/groups`);
-          selectedElectiveGroups.value = resp.data;
-        } catch (err) {
-          console.error('Не удалось загрузить группы электива', err);
-          selectedElectiveGroups.value = [];
-        }
-      }
-  
-      // --- ГРУППИРОВКА ПОЛУЧЕННЫХ ГРУПП ПО TYPE ---
-      const groupedByType = computed(() => {
-        const map = {};
-        selectedElectiveGroups.value.forEach((g) => {
-          if (!map[g.type]) {
-            map[g.type] = [];
-          }
-          map[g.type].push(g);
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
+<script>
+import { ref, reactive, onMounted } from 'vue';
+import axios from 'axios';
+import RequestCard from '@/components/RequestCard.vue';
+
+export default {
+  name: 'RequestsView',
+  components: {
+    RequestCard,
+  },
+  setup() {
+    // Локальные состояния
+    const userId = ref(null);
+    const userRequests = ref([]);
+    const loadingRequests = ref(false);
+    const requestsError = ref(null);
+
+    // Группированные заявки
+    const groupsData = reactive({});
+
+    // DnD: храним индексы
+    const draggedIndex = reactive({});
+    const dragOverIndex = reactive({});
+
+    // Загрузка пользователя
+    async function loadCurrentUser() {
+      try {
+        const userEmail =
+          localStorage.getItem('userEmail') || 'stud0000257868@study.utmn.ru';
+        const resp = await axios.get('/api/users', {
+          params: { email: userEmail },
         });
-        return map;
-      });
-  
-      // --- МОЖНО ЛИ ОТПРАВИТЬ ЗАЯВКУ ---
-      const canSubmit = computed(() => {
-        const types = Object.keys(groupedByType.value);
-        if (types.length === 0) return false;
-        return types.every((type) => selectedGroupsMap.value[type]);
-      });
-  
-      // --- ОТПРАВКА ЗАЯВКИ ---
-      async function submitRequest() {
-        try {
-          const chosenGroups = [];
-          Object.keys(selectedGroupsMap.value).forEach((type) => {
-            const groupId = selectedGroupsMap.value[type];
-            const g = groupedByType.value[type].find((gg) => gg.id === groupId);
-            if (g) {
-              chosenGroups.push({
-                id: g.id,
-                type: g.type,
-                name: g.name,
-              });
-            }
-          });
-  
-          const payload = {
-            userId: userId.value,
-            electiveId: selectedElective.value,
-            selectedGroups: chosenGroups,
+        userId.value = resp.data.id;
+      } catch (err) {
+        console.error('Ошибка при загрузке пользователя', err);
+      }
+    }
+
+    // Загрузка заявок для этого пользователя
+    async function fetchRequests() {
+      if (!userId.value) return;
+      loadingRequests.value = true;
+      requestsError.value = null;
+      try {
+        const resp = await axios.get('/api/requests', {
+          params: { userId: userId.value },
+        });
+        userRequests.value = resp.data;
+        buildGroups();
+      } catch (err) {
+        console.error(err);
+        requestsError.value = 'Не удалось загрузить ваши заявки';
+      } finally {
+        loadingRequests.value = false;
+      }
+    }
+
+    // Инициализация
+    onMounted(async () => {
+      await loadCurrentUser();
+      if (userId.value) {
+        fetchRequests();
+      }
+    });
+
+    // Формируем объект groupsData
+    function buildGroups() {
+      // Очищаем прежние данные
+      for (const k in groupsData) {
+        delete groupsData[k];
+      }
+      // Раскладываем userRequests по sourceElectiveId
+      userRequests.value.forEach((req) => {
+        const id = req.sourceElectiveId;
+        if (!id) return;
+        if (!groupsData[id]) {
+          groupsData[id] = {
+            name: req.sourceElectiveName || 'Неизвестный электив',
+            requests: [],
           };
-  
-          await axios.post('/api/requests', payload);
-          // Обновить список заявок
-          fetchRequests();
-          // Сброс
-          selectedElective.value = null;
-          selectedElectiveGroups.value = [];
-          selectedGroupsMap.value = {};
-          alert('Заявка успешно отправлена!');
-        } catch (err) {
-          console.error('Ошибка при отправке заявки', err);
-          alert('Не удалось отправить заявку, попробуйте позже.');
+        }
+        groupsData[id].requests.push(req);
+      });
+
+      // Сортируем
+      for (const sourceId in groupsData) {
+        const group = groupsData[sourceId];
+        const arr = group.requests;
+        // Если есть «Одобрено», оставляем только его
+        const approved = arr.find((r) => r.status === 'Одобрено');
+        if (approved) {
+          group.requests = [approved];
+        } else {
+          // Иначе, «Отклонено» в конце, остальные по приоритету
+          arr.sort((a, b) => {
+            if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
+            if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
+            return (a.priority || 0) - (b.priority || 0);
+          });
         }
       }
-  
-      onMounted(async () => {
-        // Сначала пользователь -> заявок
-        await loadCurrentUser();
-        if (userId.value) {
-          fetchRequests();
-        }
-        // Список всех элективов
-        fetchAllElectives();
-      });
-  
-      // --- ВИЗУАЛИЗАЦИЯ ЗАЯВОК (аналогично главной) ---
-      const statusLabels = ['Ожидается', 'Одобрено', 'Отклонено'];
-      const requestsByStatus = computed(() => {
-        const counts = { 'Ожидается': 0, 'Одобрено': 0, 'Отклонено': 0 };
-        userRequests.value.forEach((req) => {
-          if (counts[req.status] !== undefined) {
-            counts[req.status]++;
-          }
+    }
+
+    // DnD Logic
+    function isDraggable(req) {
+      return req.status === 'Ожидается';
+    }
+
+    function onDragStart(e, sourceElectiveId, index) {
+      draggedIndex[sourceElectiveId] = index;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    }
+
+    function onDragEnter(e, sourceElectiveId, index) {
+      dragOverIndex[sourceElectiveId] = index;
+    }
+
+    function onDragLeave(e, sourceElectiveId, index) {
+      if (dragOverIndex[sourceElectiveId] === index) {
+        dragOverIndex[sourceElectiveId] = null;
+      }
+    }
+
+    function onDragOver(e, sourceElectiveId, index) {
+      e.preventDefault();
+      dragOverIndex[sourceElectiveId] = index;
+    }
+
+    // SWAP
+    function onDrop(e, sourceElectiveId, dropIndex) {
+      const fromIndex = draggedIndex[sourceElectiveId];
+      if (fromIndex == null || dropIndex == null) return;
+      const group = groupsData[sourceElectiveId];
+      if (!group) return;
+
+      const arr = group.requests;
+      // Не даём SWAP с «Отклонено»
+      if (
+        arr[fromIndex].status === 'Отклонено' ||
+        arr[dropIndex].status === 'Отклонено'
+      ) {
+        return;
+      }
+      // Меняем местами
+      if (fromIndex !== dropIndex) {
+        const tmp = arr[fromIndex];
+        arr[fromIndex] = arr[dropIndex];
+        arr[dropIndex] = tmp;
+        // Пересчитываем приоритет
+        updatePriorities(sourceElectiveId);
+        // Снова сортируем отклонённые в конец
+        arr.sort((a, b) => {
+          if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
+          if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
+          return (a.priority || 0) - (b.priority || 0);
         });
-        return counts;
+      }
+      draggedIndex[sourceElectiveId] = null;
+      dragOverIndex[sourceElectiveId] = null;
+    }
+
+    function onDragEnd(e, sourceElectiveId) {
+      draggedIndex[sourceElectiveId] = null;
+      dragOverIndex[sourceElectiveId] = null;
+    }
+
+    // Обновляем приоритет на сервере
+    function updatePriorities(sourceElectiveId) {
+      const group = groupsData[sourceElectiveId];
+      if (!group) return;
+      group.requests.forEach((r, idx) => {
+        r.priority = idx + 1;
       });
-      const requestsBarData = computed(() => {
-        return statusLabels.map((status) => requestsByStatus.value[status] || 0);
-      });
-      const requestsBarColors = ['#FFC107', '#4CAF50', '#F44336'];
-  
-      // Цвет чипа для статуса
-      const statusColor = (status) => {
-        switch (status) {
-          case 'Ожидается':
-            return 'yellow darken-2';
-          case 'Одобрено':
-            return 'green darken-2';
-          case 'Отклонено':
-            return 'red darken-2';
-          default:
-            return 'blue';
-        }
-      };
-  
-      // --- ОБРАБОТКА ДАННЫХ ЭЛЕКТИВОВ ---
-      const formattedElectives = computed(() => {
-        return electives.value.map(course => ({
-          id: course.id,
-          name: course.name || 'Неизвестный электив'
-        }));
-      });
-  
-      return {
-        userId,
-        userRequests,
-        loadingRequests,
-        requestsError,
-        electives,
-        loadingCourses,
-        coursesError,
-        selectedElective,
-        selectedElectiveGroups,
-        onElectiveChange,
-        groupedByType,
-        selectedGroupsMap,
-        canSubmit,
-        submitRequest,
-  
-        // Визуализация заявок
-        statusLabels,
-        requestsBarData,
-        requestsBarColors,
-        statusColor,
-  
-        // Обработанные элективы
-        formattedElectives,
-      };
-    },
-  };
-  </script>
-  
-  <style scoped>
+      const updatedPriorities = group.requests.map((r) => ({
+        id: r.id,
+        priority: r.priority,
+      }));
+      axios
+        .post('/api/requests/reorder', {
+          sourceElectiveId,
+          items: updatedPriorities,
+        })
+        .then(() =>
+          console.log(`Приоритеты обновлены для электив ID=${sourceElectiveId}`)
+        )
+        .catch((err) => console.error('Ошибка при reorder', err));
+    }
+
+    // Когда дочерний RequestCard сэмитил `request-canceled`
+    // Удаляем заявку из userRequests, затем пересобираем groupsData
+    function onRequestCanceled(id) {
+      // Убираем заявку из userRequests
+      userRequests.value = userRequests.value.filter((r) => r.id !== id);
+      // Пересобираем
+      buildGroups();
+    }
+
+    return {
+      userRequests,
+      loadingRequests,
+      requestsError,
+      groupsData,
+      draggedIndex,
+      dragOverIndex,
+
+      isDraggable,
+      onDragStart,
+      onDragEnter,
+      onDragLeave,
+      onDragOver,
+      onDrop,
+      onDragEnd,
+      updatePriorities,
+
+      onRequestCanceled,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.requests-container {
+  font-family: 'Montserrat', sans-serif;
+  padding: 20px 15px;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.main-request-card {
+  border: none;
+  background: transparent !important; /* Прозрачный фон */
+  box-shadow: none !important; /* Убираем тень */
+}
+
+.header-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: transparent; /* Прозрачный фон */
+  border-radius: 8px;
+}
+
+.requests-title {
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: #2c2c2c;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.source-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: transparent; /* Прозрачный фон */
+  box-shadow: none !important; /* Убираем тень */
+}
+
+.group-header {
+  padding: 8px 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1); /* Полупрозрачная граница */
+}
+
+.source-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.request-card-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent !important; /* Прозрачный фон */
+}
+
+.request-card-wrapper:hover {
+  transform: translateY(-2px);
+}
+
+.drop-target {
+  outline: 2px dashed #1976d2;
+  background-color: rgba(25, 118, 210, 0.05);
+}
+
+.rejected {
+  opacity: 0.7;
+  filter: grayscale(0.8);
+}
+
+.no-requests-text {
+  padding: 32px;
+  text-align: center;
+  color: #757575;
+  font-size: 1.1rem;
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 600px) {
   .requests-container {
-    font-family: 'Montserrat', sans-serif;
-    padding: 30px 15px;
-    max-width: 1200px;
-    margin: 0 auto;
-    box-sizing: border-box;
+    padding: 10px;
+  }
+  
+  .header-section {
+    padding: 12px 0;
   }
   
   .requests-title {
-    font-weight: 600;
-    margin-bottom: 16px;
+    font-size: 1.3rem;
   }
-  
-  .custom-shadow {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
-  }
-  
-  /* Легенда для диаграммы */
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 8px;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-  }
-  .legend-item .v-avatar {
-    border-radius: 50%;
-  }
-  </style>
+}
+</style>

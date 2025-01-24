@@ -3,6 +3,12 @@
     <div class="blue-stripe"></div>
     <div class="course-card__content">
       <h3 class="course-title">{{ course.name }}</h3>
+      
+      <!-- Добавьте этот блок -->
+      <div v-if="additionalText" class="additional-info">
+        {{ additionalText }}
+      </div>
+
       <span
         class="course-cluster"
         :style="{ backgroundColor: clusterColor, color: textColor }"
@@ -23,6 +29,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  additionalText: {  // <-- Добавьте этот пропс
+    type: String,
+    default: ''
+  }
 });
 
 const router = useRouter();
@@ -102,11 +112,22 @@ function goToCourse() {
 }
 
 .course-cluster {
-  display: inline-block;
+  display: block;
+  width: fit-content;
   margin-top: 10px;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
+}
+
+.additional-info {
+  font-size: 12px;
+  color: #666;
+  margin: 6px 0;
+  padding: 4px 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  display: inline-block;
 }
 </style>

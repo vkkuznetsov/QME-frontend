@@ -1,62 +1,64 @@
 <template>
   <v-container fluid class="home-container">
-    <!-- Дашборд -->
-    <v-card class="pa-4 mb-6 dashboard-card">
-      <h1 class="dashboard-title">Добро пожаловать!</h1>
+    <!-- Блок рекомендаций -->
+    <div v-if="!loadingUser" class="mb-8">
+      <h2 class="section-title mb-4">Студенты вашего направления "{{ user.direction }}" чаще всего выбирают:</h2>
 
-      <div v-if="loadingUser || loadingRequests" class="text-center my-4">
+      <div v-if="loadingStudents" class="text-center my-4">
         <v-progress-circular indeterminate color="primary" />
       </div>
-      <div v-else class="dashboard-stats">
-        <p><strong>Ваше имя:</strong> {{ user.name }}</p>
-        <p><strong>Количество заявок на перезапись:</strong> {{ userRequests.length }}</p>
 
-        <!-- Небольшая визуализация заявок по статусам -->
-        <div class="requests-visual">
-          <v-row align="center" justify="space-around">
-            <!-- Пример бар-чарта со статусами (если v-sparkline доступен) -->
-            <v-col cols="12" sm="6">
-              <h3 class="chart-title">Статистика по заявкам (статусы)</h3>
-              <v-sparkline
-                :value="requestsBarData"
-                type="bar"
-                height="60"
-                :color="requestsBarColors"
-              ></v-sparkline>
-              <!-- Легенда -->
-              <div class="legend mt-2">
-                <span v-for="(label, index) in statusLabels" :key="index" class="legend-item">
-                  <v-avatar size="14" class="mr-1" :color="requestsBarColors[index]"></v-avatar>
-                  {{ label }} ({{ requestsBarData[index] }})
+      <v-row v-else-if="recommendedClusters.length > 0" class="cluster-list">
+        <v-col
+          v-for="cluster in recommendedClusters"
+          :key="cluster.name"
+          cols="12"
+          class="cluster-item"
+        >
+          <v-card class="pa-4" flat style="box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+            <div class="d-flex align-center mb-4">
+              <h3 
+                class="cluster-title"
+                :style="{ color: cluster.color }"
+              >
+                {{ cluster.name }}
+                <span class="cluster-percent text-medium-emphasis">
+                  (выбрали {{ cluster.percent }}% студентов)
                 </span>
-              </div>
-            </v-col>
+              </h3>
+            </div>
+            
+            <v-row class="courses-list">
+              <v-col
+                v-for="course in cluster.topCourses"
+                :key="course.id"
+                cols="12"
+                sm="6"
+                md="4"
+              >
+              <CourseCard 
+                :course="{
+                  ...course,
+                  cluster: cluster.name
+                }"
+                :additional-text="`${course.studentCount} студентов`"
+                variant="outlined"
+              />
+              </v-col>
+            </v-row>
+          </v-card>
+        </v-col>
+      </v-row>
 
-            <!-- Пример простых прогресс-баров (процент одобренных / отклонённых заявок) -->
-            <v-col cols="12" sm="6">
-              <h3 class="chart-title">Процентное соотношение</h3>
-              <p class="mb-1"><strong>Одобрено: {{ approvedPercent }}%</strong></p>
-              <v-progress-linear
-                :value="approvedPercent"
-                height="10"
-                color="green"
-                stream
-                rounded
-              ></v-progress-linear>
-
-              <p class="mt-4 mb-1"><strong>Отклонено: {{ rejectedPercent }}%</strong></p>
-              <v-progress-linear
-                :value="rejectedPercent"
-                height="10"
-                color="red"
-                stream
-                rounded
-              ></v-progress-linear>
-            </v-col>
-          </v-row>
-        </div>
-      </div>
-    </v-card>
+      <v-alert
+        v-else
+        type="info"
+        variant="tonal"
+        class="mt-4"
+      >
+        Нет данных для отображения рекомендаций
+      </v-alert>
+    </div>
 
     <!-- Все курсы -->
     <h2 class="section-title">Все элективные курсы</h2>
@@ -130,7 +132,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
-import coursesData from './data/courses_clusters.json';
+import { generateColorFromString, darkenColor} from '@/utils/colorUtils';
 import CourseCard from '@/components/CourseCard.vue';
 
 export default {
@@ -139,67 +141,68 @@ export default {
     CourseCard,
   },
   setup() {
-    // --- Курсы и фильтры ---
-    const courses = ref(coursesData);
+    // --- Состояния ---
+    const courses = ref([]);
     const searchQuery = ref('');
     const selectedCluster = ref(null);
     const currentPage = ref(1);
     const itemsPerPage = ref(8);
-
-    // --- Дашборд: пользователь и заявки ---
     const user = ref({});
-    const userRequests = ref([]);
+    const students = ref([]);
     const loadingUser = ref(true);
+    const loadingStudents = ref(true);
+    const userRequests = ref([]);
     const loadingRequests = ref(true);
 
+    // --- Данные пользователя ---
     const userEmail = localStorage.getItem('userEmail') || 'stud0000257868@study.utmn.ru';
 
-    async function fetchUserProfile() {
+    // --- Методы загрузки данных ---
+    const fetchUserProfile = async () => {
       try {
-        const response = await axios.get('/api/users', {
-          params: { email: userEmail },
-        });
+        const response = await axios.get('/api/users', { params: { email: userEmail } });
         user.value = response.data;
       } catch (e) {
         console.error('Ошибка при загрузке пользователя', e);
       } finally {
         loadingUser.value = false;
       }
-    }
+    };
 
-    async function fetchUserRequests() {
+    const fetchStudents = async () => {
       try {
-        // ждем, пока user загружен
-        const response = await axios.get('/api/requests', {
-          params: { userId: user.value.id },
-        });
+        const response = await axios.get('/api/students');
+        students.value = response.data;
+      } catch (error) {
+        console.error('Ошибка загрузки студентов:', error);
+      } finally {
+        loadingStudents.value = false;
+      }
+    };
+
+    const fetchUserRequests = async () => {
+      try {
+        const response = await axios.get('/api/requests', { params: { userId: user.value.id } });
         userRequests.value = response.data;
       } catch (e) {
         console.error('Ошибка при загрузке заявок', e);
       } finally {
         loadingRequests.value = false;
       }
-    }
+    };
 
-    onMounted(async () => {
-      await fetchUserProfile();
-      await fetchUserRequests();
-    });
-
-    // --- Фильтрация курсов ---
+    // --- Вычисляемые свойства ---
     const allClusterItems = computed(() => {
-      return Array.from(new Set(courses.value.map((course) => course.cluster)));
+      return [...new Set(courses.value.map(course => course.cluster))];
     });
 
     const filteredCourses = computed(() => {
-      return courses.value.filter((course) => {
-        const matchesSearch =
-          !searchQuery.value ||
+      return courses.value.filter(course => {
+        const matchesSearch = !searchQuery.value || 
           (course.name + ' ' + (course.description || ''))
             .toLowerCase()
             .includes(searchQuery.value.toLowerCase());
-        const matchesCluster =
-          !selectedCluster.value || course.cluster === selectedCluster.value;
+        const matchesCluster = !selectedCluster.value || course.cluster === selectedCluster.value;
         return matchesSearch && matchesCluster;
       });
     });
@@ -214,83 +217,119 @@ export default {
       return Math.ceil(filteredCourses.value.length / itemsPerPage.value);
     });
 
-    function changePage(page) {
+    const recommendedClusters = computed(() => {
+  if (!user.value.direction || students.value.length === 0) return [];
+
+  const directionStudents = students.value.filter(s => s.direction === user.value.direction);
+  const clusterStats = {};
+
+  directionStudents.forEach(student => {
+    const uniqueCourses = new Set();
+    student.groups.forEach(group => {
+      const clusterName = group.elective.cluster;
+      const courseId = group.elective.id;
+      
+      if (!clusterStats[clusterName]) {
+        clusterStats[clusterName] = {
+          total: 0,
+          courses: {},
+          students: new Set(),
+          color: darkenColor(generateColorFromString(clusterName), 30)
+        };
+      }
+      
+      clusterStats[clusterName].total++;
+      clusterStats[clusterName].students.add(student.id);
+      
+      if (!uniqueCourses.has(courseId)) {
+        if (!clusterStats[clusterName].courses[courseId]) {
+          clusterStats[clusterName].courses[courseId] = {
+            ...group.elective,
+            studentCount: 0
+          };
+        }
+        clusterStats[clusterName].courses[courseId].studentCount++;
+        uniqueCourses.add(courseId);
+      }
+    });
+  });
+
+  return Object.entries(clusterStats)
+    .map(([name, stats]) => {
+      const totalDirectionStudents = directionStudents.length;
+      return {
+        name,
+        percent: Math.round((stats.students.size / totalDirectionStudents) * 100),
+        totalStudents: stats.students.size,
+        topCourses: Object.values(stats.courses)
+          .map(course => {
+            const percent = (course.studentCount / totalDirectionStudents) * 100;
+            return {
+              ...course,
+              percent: percent.toFixed(1)
+            };
+          })
+          .sort((a, b) => b.studentCount - a.studentCount)
+          .slice(0, 5),
+        color: stats.color
+      };
+    })
+    .sort((a, b) => b.percent - a.percent)
+    .filter(c => c.percent > 0)
+    .slice(0, 5);
+});
+
+    // --- Методы ---
+    const changePage = (page) => {
       if (page > 0 && page <= totalPages.value) {
         currentPage.value = page;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    }
+    };
 
-    function resetFilters() {
+    const resetFilters = () => {
       searchQuery.value = '';
       selectedCluster.value = null;
       currentPage.value = 1;
-    }
+    };
 
-    // --- Визуализация заявок ---
-    // Предположим, что у заявок поле "status" может быть: "Ожидается", "Одобрено", "Отклонено" и т. д.
-    // Сформируем три основные категории
-    const statusLabels = ['Ожидается', 'Одобрено', 'Отклонено'];
-    const requestsByStatus = computed(() => {
-      const counts = { 'Ожидается': 0, 'Одобрено': 0, 'Отклонено': 0 };
-      userRequests.value.forEach((req) => {
-        if (counts[req.status] !== undefined) {
-          counts[req.status]++;
-        }
-      });
-      return counts;
-    });
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('/api/courses');
+        courses.value = response.data;
+      } catch (e) {
+        console.error('Ошибка при загрузке курсов', e);
+      }
+    };
 
-    // Для sparkline (бар-чарт), нужен массив из чисел
-    const requestsBarData = computed(() => {
-      return statusLabels.map((status) => requestsByStatus.value[status] || 0);
-    });
 
-    // Цвета для каждого столбика
-    const requestsBarColors = computed(() => {
-      // Например: Ожидается (желтый), Одобрено (зеленый), Отклонено (красный)
-      return ['#FFC107', '#4CAF50', '#F44336'];
-    });
-
-    // Процент одобренных / отклонённых
-    const totalRequestsCount = computed(() => userRequests.value.length);
-    const approvedPercent = computed(() => {
-      if (totalRequestsCount.value === 0) return 0;
-      return Math.round((requestsByStatus.value['Одобрено'] / totalRequestsCount.value) * 100);
-    });
-    const rejectedPercent = computed(() => {
-      if (totalRequestsCount.value === 0) return 0;
-      return Math.round((requestsByStatus.value['Отклонено'] / totalRequestsCount.value) * 100);
+    // --- Хуки жизненного цикла ---
+    onMounted(async () => {
+      await fetchCourses();
+      await fetchUserProfile();
+      await Promise.all([fetchStudents(), fetchUserRequests()]);
     });
 
     return {
+      courses,
       searchQuery,
       selectedCluster,
-      courses,
       currentPage,
       itemsPerPage,
       filteredCourses,
       paginatedCourses,
       totalPages,
       allClusterItems,
-      changePage,
-      resetFilters,
-
-      // Дашборд
       user,
-      userRequests,
+      recommendedClusters,
       loadingUser,
+      loadingStudents,
+      userRequests,
       loadingRequests,
-
-      // Визуализация заявок
-      statusLabels,
-      requestsByStatus,
-      requestsBarData,
-      requestsBarColors,
-      approvedPercent,
-      rejectedPercent,
+      changePage,
+      resetFilters
     };
-  },
+  }
 };
 </script>
 
@@ -299,49 +338,43 @@ export default {
   font-family: 'Montserrat', sans-serif;
   padding: 30px 15px;
   margin: 0 auto;
-  max-width: 1200px;
+  max-width: 1400px;
   box-sizing: border-box;
 }
 
-.dashboard-card {
+.recommendations-card {
   border-radius: 12px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background: #f8f9fa;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
-.dashboard-title {
-  font-size: 1.5rem;
-  margin-bottom: 16px;
+.cluster-card {
+  padding: 16px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.cluster-header {
+  margin-bottom: 12px;
+}
+
+.cluster-title {
+  font-size: 1.25rem;
   font-weight: 600;
-}
-
-.dashboard-stats p {
-  margin: 4px 0;
-}
-
-.requests-visual {
-  margin-top: 20px;
-}
-
-.chart-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.legend {
+  letter-spacing: 0.15px;
   display: flex;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 8px;
 }
-.legend-item {
-  display: flex;
-  align-items: center;
+
+.cluster-percent {
   font-size: 0.9rem;
+  font-weight: 400;
 }
-.legend-item .v-avatar {
-  border-radius: 50%;
+
+.cluster-item:last-child {
+  border-bottom: none;
 }
 
 .section-title {
@@ -350,10 +383,12 @@ export default {
   margin-top: 20px;
   letter-spacing: 0.5px;
   font-size: 20px;
+  padding-bottom: 20px;
 }
 
 .filters-card {
   border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .pagination {
@@ -362,9 +397,21 @@ export default {
   align-items: center;
   margin-top: 20px;
   gap: 10px;
+  padding: 16px 0;
 }
 
 .page-info {
   font-weight: 500;
+  color: #666;
+}
+
+@media (max-width: 600px) {
+  .cluster-title {
+    font-size: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
 }
 </style>
