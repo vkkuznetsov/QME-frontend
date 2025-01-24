@@ -231,7 +231,7 @@ export default {
       loadingUser.value = true;
       try {
 
-        const email = 'stud0000287234@study.utmn.ru'; // Пример из моков
+         const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
         const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
         currentUser.value = response.data;
         await fetchSourceCourses();
