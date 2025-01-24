@@ -25,10 +25,10 @@
                   </v-col>
 
                   <v-col>
-                    <h2 class="mb-1">{{ user.name }}</h2>
+                    <h2 class="mb-1">{{ user.fio }}</h2>
                     <p class="mb-0"><strong>Email:</strong> {{ user.email }}</p>
-                    <p class="mb-0"><strong>Направление:</strong> {{ user.direction }}</p>
-                    <p class="mb-4"><strong>Год поступления:</strong> {{ user.admissionYear }}</p>
+                    <p class="mb-0"><strong>Направление:</strong> {{ user.sp_code }}</p>
+                    <p class="mb-4"><strong>Год поступления:</strong> {{ user.potok }}</p>
                   </v-col>
                 </v-row>
               </div>
@@ -40,8 +40,8 @@
                 <h2 class="groups-title">Мои элективы</h2>
                 <v-expansion-panels multiple>
                   <v-expansion-panel
-                    v-for="(groupsArray, electiveName) in electivesList"
-                    :key="electiveName"
+                      v-for="(groupsArray, electiveName) in electivesList"
+                      :key="electiveName"
                   >
                     <v-expansion-panel-title>
                       {{ electiveName }}
@@ -52,32 +52,16 @@
                       <div>
                         <v-row>
                           <v-col
-                            v-for="(grp) in groupsArray"
-                            :key="grp.id"
-                            cols="12"
-                            md="6"
-                            class="mb-4"
+                              v-for="(grp) in groupsArray"
+                              :key="grp.id"
+                              cols="12"
+                              md="6"
+                              class="mb-4"
                           >
                             <v-card outlined class="pa-3">
-                              <strong>Группа:</strong> {{ grp.name }}<br />
-                              <strong>Тип:</strong> {{ grp.type }}<br />
-                              <strong>Вместимость:</strong> {{ grp.capacity }}
-
-                              <!-- Небольшая полоска заполненности -->
-                              <v-progress-linear
-                                class="mt-2"
-                                :value="groupFill(grp)"
-                                height="10"
-                                :color="fillColor(grp)"
-                                stream
-                                rounded
-                              >
-                                <template v-slot:default>
-                                  <div class="progress-slot">
-                                    {{ groupFill(grp) }}%
-                                  </div>
-                                </template>
-                              </v-progress-linear>
+                              <strong>Группа:</strong> {{ grp.name }}<br/>
+                              <strong>Тип:</strong> {{ grp.type }}<br/>
+                              <strong>Вместимость:</strong> {{ grp.capacity }}<br/>
                             </v-card>
                           </v-col>
                         </v-row>
@@ -105,7 +89,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue';
+import {ref, reactive, computed, onMounted} from 'vue';
 import axios from 'axios';
 
 export default {
@@ -113,27 +97,28 @@ export default {
   setup() {
     // Состояние пользователя
     const user = reactive({
-      name: '',
+      fio: '',
       email: '',
-      direction: '',
-      admissionYear: '',
+      sp_code: '',
+      potok: '',
       groups: [],
     });
 
     // Состояния загрузки и ошибки
     const loading = ref(true);
     const error = ref(null);
+    const API_URL = process.env.VUE_APP_API_URL;
 
     // Получение профиля пользователя
     const fetchUserProfile = async (email) => {
       try {
-        const response = await axios.get('/api/users', { params: { email } });
+        const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
         Object.assign(user, response.data);
       } catch (err) {
         console.error(err);
         if (err.response) {
           error.value =
-            err.response.data.message || 'Не удалось загрузить данные пользователя.';
+              err.response.data.message || 'Не удалось загрузить данные пользователя.';
         } else {
           error.value = 'Не удалось подключиться к серверу.';
         }
@@ -143,7 +128,7 @@ export default {
     };
 
     onMounted(() => {
-      const userEmail = localStorage.getItem('userEmail') || 'stud0000257868@study.utmn.ru';
+      const userEmail = localStorage.getItem('userEmail') || 'stud0000287234@study.utmn.ru';
       fetchUserProfile(userEmail);
     });
 

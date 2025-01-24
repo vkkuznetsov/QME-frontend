@@ -46,7 +46,7 @@
                 <v-img :src="student.avatar || defaultAvatar"></v-img>
               </v-list-item-avatar>
               <v-list-item-content>
-                <v-list-item-title>{{ student.name }}</v-list-item-title>
+                <v-list-item-title>{{ student.fio }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item v-if="group.students.length === 0">

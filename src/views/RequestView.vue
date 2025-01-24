@@ -9,7 +9,7 @@
 
           <!-- Индикатор загрузки / Ошибка -->
           <div v-if="loadingRequests" class="text-center my-4">
-            <v-progress-circular indeterminate color="primary" />
+            <v-progress-circular indeterminate color="primary"/>
           </div>
           <div v-else-if="requestsError" class="text-center my-4">
             <v-alert type="error" dismissible>{{ requestsError }}</v-alert>
@@ -22,14 +22,15 @@
             <!-- Иначе отображаем секции по sourceElectiveId -->
             <div v-else>
               <div
-                v-for="(group, sourceElectiveId) in groupsData"
-                :key="sourceElectiveId"
-                class="source-section mb-8"
+                  v-for="(group, sourceElectiveId) in groupsData"
+                  :key="sourceElectiveId"
+                  class="source-section mb-8"
               >
                 <!-- Заголовок для каждой группы -->
                 <div class="group-header d-flex align-center mb-3">
                   <v-icon color="primary" class="mr-2" size="24"
-                    >mdi-book-outline</v-icon
+                  >mdi-book-outline
+                  </v-icon
                   >
                   <h3 class="source-title">{{ group.name }}</h3>
                 </div>
@@ -37,32 +38,32 @@
                 <!-- Сетка заявок -->
                 <v-row class="dnd-list" dense>
                   <v-col
-                    v-for="(req, index) in group.requests"
-                    :key="req.id"
-                    cols="12"
-                    md="4"
-                    lg="3"
-                    class="d-flex"
+                      v-for="(req, index) in group.requests"
+                      :key="req.id"
+                      cols="12"
+                      md="4"
+                      lg="3"
+                      class="d-flex"
                   >
                     <!-- DnD оболочка -->
                     <div
-                      class="request-card-wrapper flex-grow-1"
-                      :class="{
+                        class="request-card-wrapper flex-grow-1"
+                        :class="{
                         'drop-target': index === dragOverIndex[sourceElectiveId],
                         'rejected': req.status === 'Отклонено',
                       }"
-                      :draggable="isDraggable(req)"
-                      @dragstart="onDragStart($event, sourceElectiveId, index)"
-                      @dragover.prevent="onDragOver($event, sourceElectiveId, index)"
-                      @dragenter.prevent="onDragEnter($event, sourceElectiveId, index)"
-                      @dragleave="onDragLeave($event, sourceElectiveId, index)"
-                      @drop="onDrop($event, sourceElectiveId, index)"
-                      @dragend="onDragEnd($event, sourceElectiveId)"
+                        :draggable="isDraggable(req)"
+                        @dragstart="onDragStart($event, sourceElectiveId, index)"
+                        @dragover.prevent="onDragOver($event, sourceElectiveId, index)"
+                        @dragenter.prevent="onDragEnter($event, sourceElectiveId, index)"
+                        @dragleave="onDragLeave($event, sourceElectiveId, index)"
+                        @drop="onDrop($event, sourceElectiveId, index)"
+                        @dragend="onDragEnd($event, sourceElectiveId)"
                     >
                       <!-- Используем компонент RequestCard -->
                       <RequestCard
-                        :req="req"
-                        @request-canceled="onRequestCanceled"
+                          :req="req"
+                          @request-canceled="onRequestCanceled"
                       />
                     </div>
                   </v-col>
@@ -77,7 +78,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import {ref, reactive, onMounted} from 'vue';
 import axios from 'axios';
 import RequestCard from '@/components/RequestCard.vue';
 
@@ -101,12 +102,14 @@ export default {
     const dragOverIndex = reactive({});
 
     // Загрузка пользователя
+    const API_URL = process.env.VUE_APP_API_URL;
+
     async function loadCurrentUser() {
       try {
         const userEmail =
-          localStorage.getItem('userEmail') || 'stud0000257868@study.utmn.ru';
-        const resp = await axios.get('/api/users', {
-          params: { email: userEmail },
+            localStorage.getItem('userEmail') || 'stud0000287234@study.utmn.ru';
+        const resp = await axios.get(`${API_URL}/student_info`, {
+          params: {email: userEmail},
         });
         userId.value = resp.data.id;
       } catch (err) {
@@ -120,8 +123,8 @@ export default {
       loadingRequests.value = true;
       requestsError.value = null;
       try {
-        const resp = await axios.get('/api/requests', {
-          params: { userId: userId.value },
+        const resp = await axios.get(`${API_URL}/transfer`, {
+          params: {student_id: userId.value},
         });
         userRequests.value = resp.data;
         buildGroups();
@@ -215,8 +218,8 @@ export default {
       const arr = group.requests;
       // Не даём SWAP с «Отклонено»
       if (
-        arr[fromIndex].status === 'Отклонено' ||
-        arr[dropIndex].status === 'Отклонено'
+          arr[fromIndex].status === 'Отклонено' ||
+          arr[dropIndex].status === 'Отклонено'
       ) {
         return;
       }
@@ -255,14 +258,14 @@ export default {
         priority: r.priority,
       }));
       axios
-        .post('/api/requests/reorder', {
-          sourceElectiveId,
-          items: updatedPriorities,
-        })
-        .then(() =>
-          console.log(`Приоритеты обновлены для электив ID=${sourceElectiveId}`)
-        )
-        .catch((err) => console.error('Ошибка при reorder', err));
+          .post('/api/requests/reorder', {
+            sourceElectiveId,
+            items: updatedPriorities,
+          })
+          .then(() =>
+              console.log(`Приоритеты обновлены для электив ID=${sourceElectiveId}`)
+          )
+          .catch((err) => console.error('Ошибка при reorder', err));
     }
 
     // Когда дочерний RequestCard сэмитил `request-canceled`
@@ -380,11 +383,11 @@ export default {
   .requests-container {
     padding: 10px;
   }
-  
+
   .header-section {
     padding: 12px 0;
   }
-  
+
   .requests-title {
     font-size: 1.3rem;
   }

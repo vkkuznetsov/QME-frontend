@@ -2,24 +2,24 @@
   <v-container fluid class="home-container">
     <!-- Блок рекомендаций -->
     <div v-if="!loadingUser" class="mb-8">
-      <h2 class="section-title mb-4">Студенты вашего направления "{{ user.direction }}" чаще всего выбирают:</h2>
+      <h2 class="section-title mb-4">Студенты вашего направления "{{ user.sp_code }}" чаще всего выбирают:</h2>
 
-      <div v-if="loadingStudents" class="text-center my-4">
-        <v-progress-circular indeterminate color="primary" />
+      <div v-if="loadingRecommendations" class="text-center my-4">
+        <v-progress-circular indeterminate color="primary"/>
       </div>
 
-      <v-row v-else-if="recommendedClusters.length > 0" class="cluster-list">
+      <v-row v-else-if="recommendations.length > 0" class="cluster-list">
         <v-col
-          v-for="cluster in recommendedClusters"
-          :key="cluster.name"
-          cols="12"
-          class="cluster-item"
+            v-for="cluster in recommendations"
+            :key="cluster.name"
+            cols="12"
+            class="cluster-item"
         >
           <v-card class="pa-4" flat style="box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
             <div class="d-flex align-center mb-4">
-              <h3 
-                class="cluster-title"
-                :style="{ color: cluster.color }"
+              <h3
+                  class="cluster-title"
+                  :style="{ color: generateClusterColor(cluster.name) }"
               >
                 {{ cluster.name }}
                 <span class="cluster-percent text-medium-emphasis">
@@ -27,23 +27,25 @@
                 </span>
               </h3>
             </div>
-            
+
             <v-row class="courses-list">
               <v-col
-                v-for="course in cluster.topCourses"
-                :key="course.id"
-                cols="12"
-                sm="6"
-                md="4"
+                  v-for="course in cluster.topCourses"
+                  :key="course.id"
+                  cols="12"
+                  sm="6"
+                  md="4"
               >
-              <CourseCard 
-                :course="{
-                  ...course,
-                  cluster: cluster.name
+                <CourseCard
+                    :course="{
+                  id: course.id,
+                  name: course.name,
+                  cluster: cluster.name,
+                  description: course.description
                 }"
-                :additional-text="`${course.studentCount} студентов`"
-                variant="outlined"
-              />
+                    :additional-text="`${course.student_count} студентов`"
+                    variant="outlined"
+                />
               </v-col>
             </v-row>
           </v-card>
@@ -51,10 +53,10 @@
       </v-row>
 
       <v-alert
-        v-else
-        type="info"
-        variant="tonal"
-        class="mt-4"
+          v-else
+          type="info"
+          variant="tonal"
+          class="mt-4"
       >
         Нет данных для отображения рекомендаций
       </v-alert>
@@ -67,33 +69,31 @@
         <!-- Поиск -->
         <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
           <v-text-field
-            v-model="searchQuery"
-            label="Поиск по названию или описанию"
-            outlined
-            dense
-            clearable
-            style="height: 56px;"
+              v-model="searchQuery"
+              label="Поиск по названию или описанию"
+              outlined
+              dense
+              clearable
           ></v-text-field>
         </v-col>
+
         <!-- Фильтр по кластеру -->
         <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
           <v-select
-            v-model="selectedCluster"
-            :items="allClusterItems"
-            label="Фильтр по кластеру"
-            outlined
-            dense
-            clearable
-            style="height: 56px;"
+              v-model="selectedCluster"
+              :items="allClusterItems"
+              label="Фильтр по кластеру"
+              outlined
+              dense
+              clearable
           ></v-select>
         </v-col>
+
         <!-- Сброс фильтров -->
         <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
           <v-btn
-            color="primary"
-            @click="resetFilters"
-            style="width: auto; min-width: 150px; margin-left: -150px;"
-            dense
+              color="primary"
+              @click="resetFilters"
           >
             Сбросить фильтры
           </v-btn>
@@ -104,36 +104,35 @@
     <!-- Вывод списка курсов -->
     <v-row>
       <v-col
-        v-for="course in paginatedCourses"
-        :key="course.id"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
+          v-for="course in paginatedCourses"
+          :key="course.id"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
       >
-        <CourseCard :course="course" />
+        <CourseCard :course="course"/>
       </v-col>
     </v-row>
 
     <!-- Пагинация -->
     <div class="pagination">
       <v-pagination
-        v-model="currentPage"
-        :length="totalPages"
-        total-visible="7"
-        @input="changePage"
-        color="primary"
+          v-model="currentPage"
+          :length="totalPages"
+          total-visible="7"
+          @input="changePage"
+          color="primary"
       ></v-pagination>
-      <span class="page-info">Страница {{ currentPage }} из {{ totalPages }}</span>
     </div>
   </v-container>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import {ref, computed, onMounted} from 'vue';
 import axios from 'axios';
-import { generateColorFromString, darkenColor} from '@/utils/colorUtils';
 import CourseCard from '@/components/CourseCard.vue';
+import {generateColorFromString, darkenColor} from '@/utils/colorUtils';
 
 export default {
   name: 'UserView',
@@ -141,69 +140,74 @@ export default {
     CourseCard,
   },
   setup() {
-    // --- Состояния ---
+    const API_URL = process.env.VUE_APP_API_URL;
+
+    // Состояния данных
     const courses = ref([]);
+    const user = ref({});
+    const recommendations = ref([]);
+
+    // Состояния загрузки
+    const loadingUser = ref(true);
+    const loadingRecommendations = ref(false);
+
+    // Состояния фильтров
     const searchQuery = ref('');
     const selectedCluster = ref(null);
     const currentPage = ref(1);
-    const itemsPerPage = ref(8);
-    const user = ref({});
-    const students = ref([]);
-    const loadingUser = ref(true);
-    const loadingStudents = ref(true);
-    const userRequests = ref([]);
-    const loadingRequests = ref(true);
+    const itemsPerPage = ref(12);
 
-    // --- Данные пользователя ---
-    const userEmail = localStorage.getItem('userEmail') || 'stud0000257868@study.utmn.ru';
-
-    // --- Методы загрузки данных ---
+    // Загрузка данных пользователя
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get('/api/users', { params: { email: userEmail } });
+        const email = localStorage.getItem('userEmail') || 'stud0000287234@study.utmn.ru';
+        const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
         user.value = response.data;
-      } catch (e) {
-        console.error('Ошибка при загрузке пользователя', e);
+      } catch (error) {
+        console.error('Ошибка загрузки пользователя:', error);
       } finally {
         loadingUser.value = false;
       }
     };
 
-    const fetchStudents = async () => {
+    // Загрузка рекомендаций
+    const fetchRecommendations = async (direction) => {
+      loadingRecommendations.value = true;
       try {
-        const response = await axios.get('/api/students');
-        students.value = response.data;
+        const response = await axios.get(`${API_URL}/recomendation/${encodeURIComponent(direction)}`);
+        recommendations.value = response.data;
       } catch (error) {
-        console.error('Ошибка загрузки студентов:', error);
+        console.error('Ошибка загрузки рекомендаций:', error);
       } finally {
-        loadingStudents.value = false;
+        loadingRecommendations.value = false;
       }
     };
 
-    const fetchUserRequests = async () => {
+    // Загрузка всех курсов
+    const fetchCourses = async () => {
       try {
-        const response = await axios.get('/api/requests', { params: { userId: user.value.id } });
-        userRequests.value = response.data;
-      } catch (e) {
-        console.error('Ошибка при загрузке заявок', e);
-      } finally {
-        loadingRequests.value = false;
+        const response = await axios.get(`${API_URL}/all_elective`);
+        courses.value = response.data;
+      } catch (error) {
+        console.error('Ошибка загрузки курсов:', error);
       }
     };
 
-    // --- Вычисляемые свойства ---
-    const allClusterItems = computed(() => {
-      return [...new Set(courses.value.map(course => course.cluster))];
-    });
+    // Вычисляемые свойства
+    const allClusterItems = computed(() => [
+      ...new Set(courses.value.map(course => course.cluster).filter(Boolean))
+    ]);
 
     const filteredCourses = computed(() => {
       return courses.value.filter(course => {
-        const matchesSearch = !searchQuery.value || 
-          (course.name + ' ' + (course.description || ''))
-            .toLowerCase()
-            .includes(searchQuery.value.toLowerCase());
-        const matchesCluster = !selectedCluster.value || course.cluster === selectedCluster.value;
-        return matchesSearch && matchesCluster;
+        const searchMatch = !searchQuery.value ||
+            `${course.name} ${course.description || ''}`
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase());
+
+        const clusterMatch = !selectedCluster.value || course.cluster === selectedCluster.value;
+
+        return searchMatch && clusterMatch;
       });
     });
 
@@ -213,77 +217,15 @@ export default {
       return filteredCourses.value.slice(start, end);
     });
 
-    const totalPages = computed(() => {
-      return Math.ceil(filteredCourses.value.length / itemsPerPage.value);
-    });
+    const totalPages = computed(() =>
+        Math.ceil(filteredCourses.value.length / itemsPerPage.value)
+    );
 
-    const recommendedClusters = computed(() => {
-  if (!user.value.direction || students.value.length === 0) return [];
-
-  const directionStudents = students.value.filter(s => s.direction === user.value.direction);
-  const clusterStats = {};
-
-  directionStudents.forEach(student => {
-    const uniqueCourses = new Set();
-    student.groups.forEach(group => {
-      const clusterName = group.elective.cluster;
-      const courseId = group.elective.id;
-      
-      if (!clusterStats[clusterName]) {
-        clusterStats[clusterName] = {
-          total: 0,
-          courses: {},
-          students: new Set(),
-          color: darkenColor(generateColorFromString(clusterName), 30)
-        };
-      }
-      
-      clusterStats[clusterName].total++;
-      clusterStats[clusterName].students.add(student.id);
-      
-      if (!uniqueCourses.has(courseId)) {
-        if (!clusterStats[clusterName].courses[courseId]) {
-          clusterStats[clusterName].courses[courseId] = {
-            ...group.elective,
-            studentCount: 0
-          };
-        }
-        clusterStats[clusterName].courses[courseId].studentCount++;
-        uniqueCourses.add(courseId);
-      }
-    });
-  });
-
-  return Object.entries(clusterStats)
-    .map(([name, stats]) => {
-      const totalDirectionStudents = directionStudents.length;
-      return {
-        name,
-        percent: Math.round((stats.students.size / totalDirectionStudents) * 100),
-        totalStudents: stats.students.size,
-        topCourses: Object.values(stats.courses)
-          .map(course => {
-            const percent = (course.studentCount / totalDirectionStudents) * 100;
-            return {
-              ...course,
-              percent: percent.toFixed(1)
-            };
-          })
-          .sort((a, b) => b.studentCount - a.studentCount)
-          .slice(0, 5),
-        color: stats.color
-      };
-    })
-    .sort((a, b) => b.percent - a.percent)
-    .filter(c => c.percent > 0)
-    .slice(0, 5);
-});
-
-    // --- Методы ---
+    // Методы
     const changePage = (page) => {
       if (page > 0 && page <= totalPages.value) {
         currentPage.value = page;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }
     };
 
@@ -293,45 +235,40 @@ export default {
       currentPage.value = 1;
     };
 
-    const fetchCourses = async () => {
-      try {
-        const response = await axios.get('/api/courses');
-        courses.value = response.data;
-      } catch (e) {
-        console.error('Ошибка при загрузке курсов', e);
-      }
-    };
+    const generateClusterColor = (clusterName) =>
+        darkenColor(generateColorFromString(clusterName || ''), 30);
 
-
-    // --- Хуки жизненного цикла ---
+    // Инициализация
     onMounted(async () => {
       await fetchCourses();
       await fetchUserProfile();
-      await Promise.all([fetchStudents(), fetchUserRequests()]);
+      if (user.value?.sp_code) {
+        await fetchRecommendations(user.value.sp_code);
+      }
     });
 
     return {
       courses,
+      user,
+      recommendations,
       searchQuery,
       selectedCluster,
       currentPage,
       itemsPerPage,
+      loadingUser,
+      loadingRecommendations,
+      allClusterItems,
       filteredCourses,
       paginatedCourses,
       totalPages,
-      allClusterItems,
-      user,
-      recommendedClusters,
-      loadingUser,
-      loadingStudents,
-      userRequests,
-      loadingRequests,
       changePage,
-      resetFilters
+      resetFilters,
+      generateClusterColor
     };
   }
 };
 </script>
+
 
 <style scoped>
 .home-container {
@@ -352,7 +289,7 @@ export default {
   padding: 16px;
   border-radius: 8px;
   background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .cluster-header {
@@ -409,7 +346,7 @@ export default {
   .cluster-title {
     font-size: 1rem;
   }
-  
+
   .section-title {
     font-size: 1.1rem;
   }

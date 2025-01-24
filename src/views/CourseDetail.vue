@@ -6,8 +6,8 @@
         <v-card class="pa-6 custom-shadow">
           <h1 class="course-title">{{ course.name }}</h1>
           <span
-            class="course-cluster"
-            :style="{ backgroundColor: clusterColor, color: textColor }"
+              class="course-cluster"
+              :style="{ backgroundColor: clusterColor, color: textColor }"
           >
             {{ course.cluster }}
           </span>
@@ -16,14 +16,14 @@
 
           <!-- Описание курса -->
           <h2 style="font-weight: 600;">Описание курса</h2>
-          <p>{{ course.description }}</p>
+          <p class="description-text">{{ course.description }}</p>
 
           <!-- Кнопка "Назад" -->
-          <v-btn 
-            color="primary" 
-            variant="outlined" 
-            class="mt-4"
-            @click="$router.back()"
+          <v-btn
+              color="primary"
+              variant="outlined"
+              class="mt-4"
+              @click="$router.back()"
           >
             <v-icon start>mdi-arrow-left</v-icon>
             Назад
@@ -40,11 +40,11 @@
 
           <v-list>
             <GroupItem
-              v-for="group in groups"
-              :key="group.id"
-              :group="group"
-              :is-expanded="expandedGroups[group.id]"
-              @toggle="toggleGroup"
+                v-for="group in groups"
+                :key="group.id"
+                :group="group"
+                :is-expanded="expandedGroups[group.id]"
+                @toggle="toggleGroup"
             />
           </v-list>
 
@@ -62,17 +62,17 @@
 
           <!-- Выбор исходного курса -->
           <v-select
-            v-model="selectedSourceCourse"
-            :items="sourceCourses"
-            item-title="name"
-            item-value="id"
-            label="Курс для замены"
-            variant="outlined"
-            color="primary"
-            :loading="loadingUser"
-            :error-messages="sourceCourseError"
-            class="mb-4"
-            prepend-icon="mdi-book-remove"
+              v-model="selectedSourceCourse"
+              :items="sourceCourses"
+              item-title="name"
+              item-value="id"
+              label="Курс для замены"
+              variant="outlined"
+              color="primary"
+              :loading="loadingUser"
+              :error-messages="sourceCourseError"
+              class="mb-4"
+              prepend-icon="mdi-book-remove"
           ></v-select>
 
           <!-- Выбор групп по типам -->
@@ -80,10 +80,10 @@
             <h3 class="text-subtitle-1 font-weight-medium mb-2">Выберите {{ type }}:</h3>
             <v-radio-group v-model="selectedGroups[type]" color="primary">
               <v-radio
-                v-for="group in typeGroups"
-                :key="group.id"
-                :value="group.id"
-                class="mb-2"
+                  v-for="group in typeGroups"
+                  :key="group.id"
+                  :value="group.id"
+                  class="mb-2"
               >
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -101,22 +101,22 @@
 
           <!-- Сообщения об ошибках и кнопка -->
           <v-alert
-            v-if="submitError"
-            type="error"
-            density="compact"
-            variant="tonal"
-            class="mb-4"
+              v-if="submitError"
+              type="error"
+              density="compact"
+              variant="tonal"
+              class="mb-4"
           >
             {{ submitError }}
           </v-alert>
 
-          <v-btn 
-            color="primary" 
-            size="large" 
-            :loading="submitting"
-            :disabled="!canSubmit"
-            block
-            @click="submitRequest"
+          <v-btn
+              color="primary"
+              size="large"
+              :loading="submitting"
+              :disabled="!canSubmit"
+              block
+              @click="submitRequest"
           >
             <v-icon start>mdi-send-check</v-icon>
             Подать заявку
@@ -125,10 +125,10 @@
 
         <!-- Сообщение о авторизации -->
         <div v-else class="text-center my-4">
-          <v-progress-circular 
-            v-if="loadingUser" 
-            indeterminate
-            color="primary"
+          <v-progress-circular
+              v-if="loadingUser"
+              indeterminate
+              color="primary"
           ></v-progress-circular>
           <v-alert v-else type="info" density="compact">
             Для перезаписи требуется авторизация
@@ -140,11 +140,11 @@
 </template>
 
 <script>
-import { computed, ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import {computed, ref, onMounted} from 'vue';
+import {useRoute} from 'vue-router';
 import axios from 'axios';
 import GroupItem from '@/components/GroupItem.vue';
-import { generateColorFromString, darkenColor } from '@/utils/colorUtils';
+import {generateColorFromString, darkenColor} from '@/utils/colorUtils';
 
 export default {
   name: 'CourseDetail',
@@ -156,11 +156,11 @@ export default {
     const courseId = route.params.id;
 
     // Состояния
-    const course = ref({ name: '', cluster: '', description: '' });
+    const course = ref({name: '', cluster: '', description: ''});
     const groups = ref([]);
     const loading = ref(false);
     const error = ref(null);
-    
+
     // Состояния для перезаписи
     const currentUser = ref(null);
     const sourceCourses = ref([]);
@@ -172,16 +172,16 @@ export default {
     const submitError = ref(null);
 
     const expandedGroups = ref({});
-    
+
     // Вычисляемые свойства
     const clusterColor = computed(() =>
-      generateColorFromString(course.value.cluster || '')
+        generateColorFromString(course.value.cluster || '')
     );
-    
+
     const textColor = computed(() =>
-      darkenColor(clusterColor.value, 50)
+        darkenColor(clusterColor.value, 50)
     );
-    
+
     const groupedGroups = computed(() => {
       const grouped = {};
       groups.value.forEach(group => {
@@ -191,10 +191,10 @@ export default {
       });
       return grouped;
     });
-    
+
     const canSubmit = computed(() => {
-      return selectedSourceCourse.value && 
-        Object.keys(groupedGroups.value).every(type => selectedGroups.value[type]);
+      return selectedSourceCourse.value &&
+          Object.keys(groupedGroups.value).every(type => selectedGroups.value[type]);
     });
 
     // Методы
@@ -202,21 +202,23 @@ export default {
       expandedGroups.value[groupId] = !expandedGroups.value[groupId];
     };
 
+    const API_URL = process.env.VUE_APP_API_URL;
+
     // Запросы данных
     async function fetchCourse() {
       try {
-        const response = await axios.get(`/api/courses/${courseId}`);
+        const response = await axios.get(`${API_URL}/elective/${courseId}`);
         course.value = response.data;
       } catch (err) {
         console.error(err);
-        course.value = { name: 'Ошибка загрузки', description: '' };
+        course.value = {name: 'Ошибка загрузки', description: ''};
       }
     }
 
     async function fetchGroups() {
       loading.value = true;
       try {
-        const response = await axios.get(`/api/courses/${courseId}/groups`);
+        const response = await axios.get(`${API_URL}/elective/${courseId}/groups`);
         groups.value = response.data;
       } catch (err) {
         error.value = 'Ошибка загрузки групп';
@@ -228,9 +230,9 @@ export default {
     async function fetchCurrentUser() {
       loadingUser.value = true;
       try {
-        // В реальном приложении email должен браться из системы аутентификации
-        const email = 'stud0000257868@study.utmn.ru'; // Пример из моков
-        const response = await axios.get('/api/users', { params: { email } });
+
+        const email = 'stud0000287234@study.utmn.ru'; // Пример из моков
+        const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
         currentUser.value = response.data;
         await fetchSourceCourses();
       } catch (err) {
@@ -242,17 +244,17 @@ export default {
 
     async function fetchSourceCourses() {
       if (!currentUser.value) return;
-      
+
       try {
         // Извлекаем элективы из групп пользователя
         const userElectives = currentUser.value.groups
-          .map(g => g.elective)
-          .filter(Boolean); // Фильтруем null/undefined
+            .map(g => g.elective)
+            .filter(Boolean); // Фильтруем null/undefined
 
         // Получаем уникальные курсы
         const uniqueElectives = [];
         const seenIds = new Set();
-        
+
         for (const elective of userElectives) {
           if (!seenIds.has(elective.id)) {
             seenIds.add(elective.id);
@@ -265,7 +267,7 @@ export default {
         }
 
         sourceCourses.value = uniqueElectives;
-        
+
       } catch (err) {
         console.error('Ошибка обработки курсов:', err);
         sourceCourses.value = [];
@@ -278,28 +280,51 @@ export default {
 
       submitting.value = true;
       try {
-        const sourceCourse = sourceCourses.value.find(c => c.id === selectedSourceCourse.value);
-        const selectedGroupIds = Object.values(selectedGroups.value);
-        const selectedGroupsData = groups.value.filter(g => selectedGroupIds.includes(g.id));
+        // Маппинг русских названий на английские
+        const typeMapping = {
+          'лекции': 'lecture',
+          'практики': 'practice',
+          'лабораторные': 'lab',
+          'консультации': 'consultation'
+        };
 
-        await axios.post('/api/requests', {
-          userId: currentUser.value.id,
-          electiveId: courseId,
-          sourceElectiveId: selectedSourceCourse.value,
-          sourceElectiveName: sourceCourse?.name || '',
-          selectedGroups: selectedGroupsData.map(g => ({
-            id: g.id,
-            type: g.type,
-            name: g.name
-          }))
+        const groupParams = {
+          to_lecture_group_id: null,
+          to_practice_group_id: null,
+          to_lab_group_id: null,
+          to_consultation_group_id: null
+        };
+
+        Object.values(selectedGroups.value).forEach(groupId => {
+          const group = groups.value.find(g => g.id === groupId);
+          if (group) {
+            // Приводим к нижнему регистру и преобразуем
+            const ruType = group.type.toLowerCase().trim();
+            const enType = typeMapping[ruType] || ruType;
+
+            const paramName = `to_${enType}_group_id`;
+
+
+            groupParams[paramName] = groupId;
+            console.error('Неизвестный тип группы:', group.type);
+
+          }
         });
 
-        // Сброс формы
-        selectedSourceCourse.value = null;
-        selectedGroups.value = {};
-        alert('Заявка успешно подана!');
+        const requestBody = {
+          student_id: Number(currentUser.value.id),
+          from_elective_id: Number(selectedSourceCourse.value),
+          to_elective_id: Number(courseId),
+          ...groupParams
+        };
+
+        console.log('Отправка данных:', requestBody);
+
+        await axios.post(`${API_URL}/transfer`, requestBody);
+
+        // ... остальной код
       } catch (err) {
-        submitError.value = 'Ошибка подачи заявки: ' + (err.response?.data?.message || err.message);
+        // ... обработка ошибок
       } finally {
         submitting.value = false;
       }
@@ -365,6 +390,12 @@ export default {
   margin-bottom: 12px;
 }
 
+.description-text {
+  white-space: pre-line;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
 .course-description {
   line-height: 1.6;
   color: rgba(0, 0, 0, 0.87);
@@ -384,11 +415,11 @@ export default {
   .course-detail-container {
     padding: 16px 12px !important;
   }
-  
+
   .course-title {
     font-size: 1.5rem;
   }
-  
+
   .section-title {
     font-size: 1.1rem;
   }
