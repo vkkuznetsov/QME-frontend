@@ -9,6 +9,8 @@ build:
 run:
 	docker run -d --rm -p 80:80 --name $(IMAGE_NAME)-container $(IMAGE_NAME):$(TAG)
 
+up: build run
+
 stop:
 	docker stop $(IMAGE_NAME)-container
 

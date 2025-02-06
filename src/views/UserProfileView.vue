@@ -128,7 +128,7 @@ export default {
     };
 
     onMounted(() => {
-      const userEmail = localStorage.getItem('userEmail') || 'stud0000287234@study.utmn.ru';
+      const userEmail = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
       fetchUserProfile(userEmail);
     });
 

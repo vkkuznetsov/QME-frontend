@@ -37,8 +37,7 @@
         <v-card class="pa-4 custom-shadow mb-4">
           <h2 class="group-title">Группы курса</h2>
           <v-divider class="my-2"></v-divider>
-
-          <v-list>
+          <v-list class="compact-list">
             <GroupItem
                 v-for="group in groups"
                 :key="group.id"
@@ -231,7 +230,7 @@ export default {
       loadingUser.value = true;
       try {
 
-         const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
+        const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
         const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
         currentUser.value = response.data;
         await fetchSourceCourses();
@@ -300,14 +299,11 @@ export default {
           if (group) {
             // Приводим к нижнему регистру и преобразуем
             const ruType = group.type.toLowerCase().trim();
-            const enType = typeMapping[ruType] || ruType;
+            const enType = typeMapping[ruType];
 
             const paramName = `to_${enType}_group_id`;
 
-
             groupParams[paramName] = groupId;
-            console.error('Неизвестный тип группы:', group.type);
-
           }
         });
 

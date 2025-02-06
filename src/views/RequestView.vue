@@ -6,7 +6,6 @@
           <div class="header-section justify-space-between" style="text-align: center;">
             <h2 class="requests-title">Мои заявки на перезапись</h2>
           </div>
-
           <!-- Индикатор загрузки / Ошибка -->
           <div v-if="loadingRequests" class="text-center my-4">
             <v-progress-circular indeterminate color="primary"/>
@@ -34,9 +33,12 @@
                   >
                   <h3 class="source-title">{{ group.name }}</h3>
                 </div>
-
+                <!-- Подсказка для перетаскивания -->
+                <div class="drag-hint text-caption grey--text text-center mb-3">
+                  Меняйте приоритет перетаскивая заявки
+                </div>
                 <!-- Сетка заявок -->
-                <v-row class="dnd-list" dense>
+                <v-row class="dnd-list interactive-area" dense>
                   <v-col
                       v-for="(req, index) in group.requests"
                       :key="req.id"
@@ -107,7 +109,7 @@ export default {
     async function loadCurrentUser() {
       try {
         const userEmail =
-            localStorage.getItem('userEmail') || 'stud0000287234@study.utmn.ru';
+            localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
         const resp = await axios.get(`${API_URL}/student_info`, {
           params: {email: userEmail},
         });
@@ -376,6 +378,21 @@ export default {
   text-align: center;
   color: #757575;
   font-size: 1.1rem;
+}
+
+.interactive-area {
+  background-color: #e4e4e4; /* Светло-серый фон */
+  border-radius: 8px; /* Скругленные углы */
+  padding: 16px; /* Внутренний отступ */
+  margin-top: 8px; /* Отступ сверху */
+}
+
+/* Стиль для подсказки "Меняйте приоритет..." */
+.drag-hint {
+  font-size: 14px; /* Размер шрифта */
+  color: #9e9e9e; /* Серый цвет текста */
+  text-align: center; /* Выравнивание по центру */
+  margin-bottom: 8px; /* Отступ снизу */
 }
 
 /* Адаптация для мобильных */

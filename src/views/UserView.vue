@@ -160,7 +160,7 @@ export default {
     // Загрузка данных пользователя
     const fetchUserProfile = async () => {
       try {
-        const email = localStorage.getItem('userEmail') || 'stud0000287234@study.utmn.ru';
+        const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
         const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
         user.value = response.data;
       } catch (error) {
