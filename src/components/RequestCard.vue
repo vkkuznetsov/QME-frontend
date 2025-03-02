@@ -51,64 +51,64 @@
   </v-card>
 </template>
 
-<script>
+<script setup>
+/* eslint-disable */
+import { computed } from 'vue';
 import axios from 'axios';
 
-export default {
-  name: 'RequestCard',
-  props: {
-    req: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    // Показываем иконку "отменить", если статус — "Ожидается"
-    showCancel() {
-      return this.req.status === 'Ожидается';
-    },
-  },
-  methods: {
-    // Класс статуса для стилизации текста
-    statusClass(status) {
-      switch (status) {
-        case 'Ожидается':
-          return 'status-pending';
-        case 'Одобрено':
-          return 'status-approved';
-        case 'Отклонено':
-          return 'status-rejected';
-        default:
-          return '';
-      }
-    },
-    // Цвет для v-chip типа группы
-    groupTypeColor(type) {
-      const lower = type.toLowerCase();
-      if (lower.includes('лекц')) return 'indigo darken-2';
-      if (lower.includes('практ')) return 'teal darken-2';
-      if (lower.includes('лаб')) return 'orange darken-2';
-      return 'purple darken-2';
-    },
+const API_URL = process.env.VUE_APP_API_URL;
 
-    // Удаление заявки (DELETE)
-    async cancelRequest() {
-      if (!this.req.id) {
-        console.error('Не удалось отменить заявку: отсутствует req.id');
-        return;
-      }
-      try {
-        // DELETE /api/requests/:id
-        await axios.delete(`/api/requests/${this.req.id}`);
-
-        // Говорим родителю «я удалена»
-        this.$emit('request-canceled', this.req.id);
-      } catch (err) {
-        console.error('Ошибка при отмене заявки:', err);
-        alert('Не удалось отменить заявку. Попробуйте позже.');
-      }
-    },
+const props = defineProps({
+  req: {
+    type: Object,
+    required: true,
   },
+});
+
+const emit = defineEmits(['request-canceled']);
+
+// Показываем иконку "отменить", если статус — "Ожидается"
+const showCancel = computed(() => props.req.status === 'Ожидается');
+
+// Класс статуса для стилизации текста
+const statusClass = (status) => {
+  switch (status) {
+    case 'Ожидается':
+      return 'status-pending';
+    case 'Одобрено':
+      return 'status-approved';
+    case 'Отклонено':
+      return 'status-rejected';
+    default:
+      return '';
+  }
+};
+
+// Цвет для v-chip типа группы
+const groupTypeColor = (type) => {
+  const lower = type.toLowerCase();
+  if (lower.includes('лекц')) return 'indigo darken-2';
+  if (lower.includes('практ')) return 'teal darken-2';
+  if (lower.includes('лаб')) return 'orange darken-2';
+  return 'purple darken-2';
+};
+
+// Удаление заявки (DELETE)
+const cancelRequest = async () => {
+  if (!props.req.id) {
+    console.error('Не удалось отменить заявку: отсутствует req.id');
+    return;
+  }
+  try {
+    // DELETE /api/requests/:id
+    await axios.delete(`${API_URL}/transfer/${props.req.id}`);
+
+    // Говорим родителю «я удалена»
+    emit('request-canceled', props.req.id);
+  } catch (err) {
+    console.error('Ошибка при отмене заявки:', err);
+    alert('Не удалось отменить заявку. Попробуйте позже.');
+  }
 };
 </script>
 
