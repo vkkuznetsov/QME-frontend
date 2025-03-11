@@ -9,6 +9,7 @@
     <!-- Навигационные кнопки рядом с логотипом -->
     <div class="nav-buttons">
       <v-btn text :to="{ path: '/' }">ГЛАВНАЯ</v-btn>
+      <v-btn text :to="{ path: '/statistics' }">СТАТИСТИКА</v-btn>
       <v-btn text :to="{ path: '/requests' }">ЗАЯВКИ</v-btn>
     </div>
 

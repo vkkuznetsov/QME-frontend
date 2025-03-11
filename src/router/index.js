@@ -9,6 +9,7 @@ import UserProfileView from '../views/UserProfileView.vue';
 import CourseDetail from '../views/CourseDetail.vue';
 import RequestView from '../views/RequestView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
+import StatisticView from '../views/StatisticView.vue';
 
 const routes = [
     {
@@ -17,20 +18,22 @@ const routes = [
         component: UserView,
         meta: {requiresAuth: true, role: 'user'},
     },
-    // Страница логина
     {
         path: '/login',
         name: 'LoginView',
         component: LoginView,
     },
-    // Админская панель
     {
         path: '/admin',
         name: 'AdminView',
         component: AdminView,
         meta: {requiresAuth: true, role: 'admin'},
     },
-
+    {
+        path:'/statistics',
+        name:'StatisticView',
+        component: StatisticView,
+    },
     {
         path: '/admin/settings',
         name: 'AdminSettingsView',
