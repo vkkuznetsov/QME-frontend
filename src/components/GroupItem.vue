@@ -6,10 +6,8 @@
           <v-icon :color="groupTypeColor" large>{{ groupIcon }}</v-icon>
         </v-avatar>
         <div>
+          <v-chip :color="groupTypeColor" text-color="white" small>{{ group.type }}</v-chip>
           <div class="group-name">{{ group.name }}</div>
-          <v-chip :color="groupTypeColor" text-color="white" small>
-            {{ group.type }}
-          </v-chip>
         </div>
       </div>
       <v-btn icon small @click="toggle">
@@ -18,121 +16,66 @@
     </v-card-title>
 
     <v-card-subtitle class="d-flex flex-column">
-      <div class="d-flex justify-space-between align-center mb-2">
-        <span class="fill-label">Заполненность</span>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-icon v-bind="attrs" v-on="on" color="grey">mdi-information</v-icon>
-          </template>
-          <span>Максимальная вместимость группы: {{ group.capacity }}</span>
-        </v-tooltip>
+      <div class="d-flex mb-2">
+        <v-avatar :color="spotColor" size="20" class="mr-2"></v-avatar>
+        <span>{{ freeSpots }} мест</span>
+        <span class="fill-label ml-auto">Заполненность ({{ group.students.length }} / {{ group.capacity }})</span>
       </div>
-      <v-progress-linear
-          :value="fillPercentage"
-          :color="progressColor"
-          height="10"
-          rounded
-      >
-        <strong class="progress-text">{{ fillPercentage }}%</strong>
-      </v-progress-linear>
     </v-card-subtitle>
 
-    <v-expand-transition>
-      <div v-if="isExpanded" class="student-list">
-        <strong>Студенты:</strong>
-        <v-list dense class="compact-student-list">
-          <v-list-item v-for="student in group.students" :key="student.id" class="compact-student-item">
-            <v-list-item-avatar>
-              <v-img :src="student.avatar || defaultAvatar"></v-img>
-            </v-list-item-avatar>
-            <v-list-item-content>
-              <v-list-item-title>{{ student.fio }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item v-if="group.students.length === 0">
-            <v-list-item-content>
-              <v-list-item-title>Нет записанных студентов</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
+    <div v-if="isExpanded" class="student-list">
+      <div v-for="student in group.students" :key="student.id" class="student-item">
+        <span>{{ student.fio }}</span>
       </div>
-    </v-expand-transition>
+      <div v-if="!group.students.length" class="student-item">
+        <span>Нет записанных студентов</span>
+      </div>
+    </div>
   </v-card>
 </template>
 
 <script>
-import {computed} from 'vue';
-import {getGroupTypeColor, getGroupIcon} from '@/utils/colorUtils';
+import { computed } from 'vue';
+import { getGroupTypeColor, getGroupIcon } from '@/utils/colorUtils';
 
 export default {
   name: 'GroupItem',
   props: {
-    group: {
-      type: Object,
-      required: true,
-    },
-    isExpanded: {
-      type: Boolean,
-      default: false,
-    },
+    group: { type: Object, required: true },
+    isExpanded: { type: Boolean, default: false },
   },
   emits: ['toggle'],
-  setup(props, {emit}) {
-    const toggle = () => {
-      emit('toggle', props.group.id);
-    };
+  setup(props, { emit }) {
+    const toggle = () => emit('toggle', props.group.id);
 
     const groupTypeColor = computed(() => getGroupTypeColor(props.group.type));
     const groupIcon = computed(() => getGroupIcon(props.group.type));
-
-    const fillPercentage = computed(() => {
-      if (props.group.capacity === 0) return 0;
-      return Math.min(
-          100,
-          Math.round((props.group.students.length / props.group.capacity) * 100)
-      );
+    const freeSpots = computed(() => props.group.capacity - props.group.students.length);
+    const spotColor = computed(() => {
+      if (freeSpots.value === 0) return '#F44336'; // Красный
+      if (freeSpots.value <= 5) return '#4CAF50'; // Зеленый
+      return '#FFC107'; // Желтый
     });
 
-    const progressColor = computed(() => {
-      if (fillPercentage.value === 0) return 'green';
-      if (fillPercentage.value > 75) return 'red';
-      return 'yellow';
-    });
-
-    const defaultAvatar = '/path/to/default/avatar.png'; // Укажите путь к изображению по умолчанию
-
-    return {
-      toggle,
-      groupTypeColor,
-      fillStatusClass: computed(() => {
-        const ratio = props.group.students.length / props.group.capacity;
-        if (ratio === 0) return 'fill-green';
-        if (ratio > 0.75) return 'fill-red';
-        return 'fill-yellow';
-      }),
-      groupIcon,
-      fillPercentage,
-      progressColor,
-      defaultAvatar,
-    };
+    return { toggle, groupTypeColor, groupIcon, freeSpots, spotColor };
   },
 };
 </script>
 
 <style scoped>
 .group-item-card {
-  border: 1px solid #e0e0e0; /* Тонкая сероватая граница */
-  border-radius: 8px; /* Умеренные скругления углов */
-  padding: 16px; /* Внутренние отступы для лучшего расположения элементов */
-  margin-bottom: 16px; /* Отступ снизу для разделения карточек */
-  background-color: #ffffff; /* Белый фон для контраста */
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #ffffff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .group-name {
   font-weight: 600;
   font-size: 1.1rem;
-  margin-bottom: 4px; /* Добавлен отступ снизу */
+  margin-bottom: 4px;
 }
 
 .fill-label {
@@ -140,56 +83,13 @@ export default {
   font-size: 0.9rem;
 }
 
-.progress-text {
-  position: absolute;
-  right: 10px;
-  top: -5px;
-  font-weight: bold;
-  color: #ffffff;
-}
-
-.v-progress-linear {
-  position: relative;
-}
-
-.fill-green {
-  background-color: #66bb6a; /* Зеленый */
-}
-
-.fill-yellow {
-  background-color: #ffa726; /* Оранжевый */
-}
-
-.fill-red {
-  background-color: #ef5350; /* Красный */
-}
-
 .student-list {
-  padding: 16px;
-  background-color: #f9f9f9;
-  border-top: 1px solid #e0e0e0;
-  margin-top: 16px; /* Добавлен отступ сверху */
-}
-.compact-student-list {
-  padding: 0; /* Убираем отступы у самого списка */
+  padding-top: 8px;
 }
 
-.compact-student-item {
-  min-height: 24px; /* Уменьшаем высоту каждого элемента */
-  padding-top: 4px; /* Уменьшаем верхний отступ */
-  padding-bottom: 4px; /* Уменьшаем нижний отступ */
-}
-
-.compact-student-item:not(:last-child) {
-  margin-bottom: 4px; /* Добавляем небольшой отступ между элементами */
-}
-
-.v-list-item-avatar {
-  margin-right: 8px;
-}
-
-.v-tooltip .v-tooltip__content {
-  max-width: 200px;
+.student-item {
+  padding: 4px 0;
+  font-size: 1rem;
 }
 
 .v-card-title,
@@ -200,11 +100,6 @@ export default {
 
 .v-chip {
   margin-top: 4px;
-  border-radius: 10px; /* Добавляем небольшой отступ сверху */
-}
-
-.student-list strong {
-  display: block;
-  margin-bottom: 8px;
+  border-radius: 10px;
 }
 </style>

@@ -26,11 +26,11 @@ export function generateColorFromString(str) {
   
   export function getGroupTypeColor(type) {
     switch (type.toLowerCase()) {
-      case 'лекция':
+      case 'лекции':
         return 'green';
-      case 'практика':
+      case 'практики':
         return 'blue';
-      case 'лабораторная':
+      case 'лабораторные':
         return 'orange';
       default:
         return 'grey';
