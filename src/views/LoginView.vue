@@ -1,6 +1,6 @@
 <template>
-  <v-container class="fill-height">
-    <v-row align="center" justify="center">
+  <v-container fluid class="fill-height d-flex align-center justify-center">
+    <v-row align="center" justify="center" class="fill-height">
       <v-col cols="12" sm="8" md="4">
         <v-card color="primary">
           <v-card-title class="justify-center">
@@ -72,5 +72,7 @@ export default {
 </script>
 
 <style scoped>
-
+  .fill-height {
+    height: 100vh;
+  }
 </style>

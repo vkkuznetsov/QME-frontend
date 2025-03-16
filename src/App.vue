@@ -1,9 +1,16 @@
 <template>
   <v-app class="app-background">
     <v-main>
-      <user-header v-if="showUserHeader" />
-      <admin-header v-else-if="showAdminHeader" />
-      <router-view />
+      <template v-if="route.path === '/login'">
+        <router-view />
+      </template>
+      <template v-else>
+        <div class="main-container">
+          <user-header v-if="showUserHeader" />
+          <admin-header v-else-if="showAdminHeader" />
+          <router-view />
+        </div>
+      </template>
     </v-main>
   </v-app>
 </template>
@@ -41,6 +48,7 @@ export default {
     return {
       showUserHeader,
       showAdminHeader,
+      route,
     };
   },
 };
@@ -50,5 +58,11 @@ export default {
 .app-background {
   background-color: #f8f8f8;
   min-height: 100vh;
+}
+
+.main-container {
+  width: 1200px;
+  margin: 0 auto;
+  margin-top: 30px;
 }
 </style>
