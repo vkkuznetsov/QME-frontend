@@ -39,9 +39,9 @@
       <v-col
           v-for="course in paginatedCourses"
           :key="course.id"
-          cols="12"
-          sm="6"
-          md="4"
+          cols="16"
+          sm="3"
+          md="3"
           lg="3"
       >
         <CourseCard :course="course"/>
@@ -76,7 +76,7 @@ export default {
     const searchQuery = ref('');
     const selectedCluster = ref(null);
     const currentPage = ref(1);
-    const itemsPerPage = ref(12);
+    const itemsPerPage = ref(16);
 
     const fetchCourses = async () => {
       try {

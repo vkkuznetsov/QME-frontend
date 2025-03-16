@@ -61,7 +61,7 @@ export default {
 }
 
 .main-container {
-  width: 1200px;
+  width: 65%;
   margin: 0 auto;
   margin-top: 30px;
 }

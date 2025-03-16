@@ -141,6 +141,6 @@ function goToCourse() {
   right: 10px;
   font-size: 12px;
   font-weight: bold;
-  color: #1976d2;
+  color: #1f9100;
 }
 </style>
