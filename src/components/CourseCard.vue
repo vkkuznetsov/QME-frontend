@@ -3,24 +3,27 @@
     <div class="blue-stripe"></div>
     <div class="course-card__content">
       <h3 class="course-title">{{ course.name }}</h3>
-      
-      <!-- Добавьте этот блок -->
+
+      <!-- Блок дополнительной информации -->
       <div v-if="additionalText" class="additional-info">
         {{ additionalText }}
       </div>
 
       <span
-        class="course-cluster"
-        :style="{ backgroundColor: clusterColor, color: textColor }"
+          class="course-cluster"
+          :style="{ backgroundColor: clusterColor, color: textColor }"
       >
         {{ course.cluster }}
       </span>
+
+      <!-- Новый элемент для числа в правом нижнем углу -->
+      <span class="free-spots">{{ course.free_spots }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-/* global defineProps */
+/* eslint-disable */
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -29,7 +32,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  additionalText: {  // <-- Добавьте этот пропс
+  additionalText: {
     type: String,
     default: ''
   }
@@ -58,9 +61,9 @@ function darkenColor(color, amount = 50) {
   g = Math.max(0, g - Math.round(255 * (amount / 100)));
   b = Math.max(0, b - Math.round(255 * (amount / 100)));
   return `#${((1 << 24) + (r << 16) + (g << 8) + b)
-    .toString(16)
-    .slice(1)
-    .toUpperCase()}`;
+      .toString(16)
+      .slice(1)
+      .toUpperCase()}`;
 }
 
 const clusterColor = computed(() => generateColorFromString(props.course.cluster));
@@ -101,6 +104,7 @@ function goToCourse() {
 .course-card__content {
   padding: 16px;
   margin-top: 10px;
+  position: relative; /* Добавлено для позиционирования free_spots */
 }
 
 .course-title {
@@ -129,5 +133,14 @@ function goToCourse() {
   background-color: #f5f5f5;
   border-radius: 4px;
   display: inline-block;
+}
+
+.free-spots {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #1976d2;
 }
 </style>

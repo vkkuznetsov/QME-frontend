@@ -9,7 +9,7 @@
     <!-- Навигационные кнопки рядом с логотипом -->
     <div class="nav-buttons">
       <v-btn text :to="{ path: '/admin' }">Главная</v-btn>
-      <v-btn text :to="{ path: '/admin/users' }">Пользователи</v-btn>
+      <v-btn text :to="{ path: '/admin/requests' }">Заявки</v-btn>
       <v-btn text :to="{ path: '/admin/reports' }">Отчёты</v-btn>
       <v-btn text :to="{ path: '/admin/settings' }">Настройки</v-btn>
     </div>

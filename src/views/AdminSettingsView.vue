@@ -2,12 +2,28 @@
   <v-container>
     <v-card>
       <v-tabs v-model="activeTab" background-color="primary" dark>
-        <v-tab value="general">Основные</v-tab>
         <v-tab value="data-upload">Загрузка данных</v-tab>
       </v-tabs>
       <v-tabs-items v-model="activeTab">
         <v-tab-item value="general">
-          <!-- Содержимое вкладки "Основные" -->
+          <v-card-text>
+            <v-data-table
+                :headers="headers"
+                :items="journalData"
+                hide-default-footer
+                class="elevation-1"
+            >
+              <template v-slot:top>
+                <v-toolbar flat>
+                  <v-toolbar-title>Журнал</v-toolbar-title>
+                </v-toolbar>
+              </template>
+              <!-- Форматирование даты -->
+              <template v-slot:[`item.created_at`]="{ item }">
+                {{ formatDate(item.created_at) }}
+              </template>
+            </v-data-table>
+          </v-card-text>
         </v-tab-item>
         <v-tab-item value="data-upload">
           <v-card-text>
@@ -65,19 +81,49 @@
 </template>
 
 <script>
+/* eslint-disable */
 import axios from 'axios';
+
+const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
   name: 'AdminSettingsView',
   data() {
     return {
-      activeTab: 'data-upload',
+      activeTab: 'general',
+      journalData: [],
+      headers: [
+        { title: 'ID', key: 'id' },
+        { title: 'Статус', key: 'status' },
+        { title: 'Дата создания', key: 'created_at' },
+        { title: 'Тип', key: 'type' },
+        { title: 'Сообщение', key: 'message' },
+      ],
       selectedFile: null,
       isLoading: false,
       isSuccess: false,
     };
   },
   methods: {
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('ru-RU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    },
+    async fetchJournalData() {
+      try {
+        const response = await axios.get(`${API_URL}/journal`);
+        this.journalData = response.data;
+      } catch (error) {
+        console.error('Ошибка при получении данных журнала:', error);
+      }
+    },
     handleFileUpload(event) {
       this.selectedFile = event.target.files[0];
       this.isSuccess = false; // Сбрасываем статус успеха при выборе нового файла
@@ -94,7 +140,7 @@ export default {
         console.log(this.selectedFile);
         console.log(formData)
         const response = await axios.post(
-            `${process.env.VUE_APP_API_URL}/upload/student-choices`,
+            `${API_URL}/upload/student-choices`,
             formData,
             {
               headers: {
@@ -115,6 +161,9 @@ export default {
         this.isLoading = false;
       }
     }
+  },
+  mounted() {
+    this.fetchJournalData();
   },
 };
 </script>

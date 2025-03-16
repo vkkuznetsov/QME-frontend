@@ -73,56 +73,56 @@
         loading: true,
         headers: [
           { 
-            text: 'ID',
+            title: 'ID',
             align: 'start',
             sortable: true,
             value: 'id',
             width: '80px'
           },
           { 
-            text: 'ФИО студента',
+            title: 'ФИО студента',
             align: 'start', 
             value: 'student_fio',
             width: '200px'
           },
           { 
-            text: 'Из предмета',
+            title: 'Откуда',
             align: 'start',
             value: 'from_elective_name'
           },
           { 
-            text: 'В предмет',
+            title: 'Куда',
             align: 'start',
             value: 'to_elective_name'
           },
           { 
-            text: 'Лекционная группа',
+            title: 'Лекционная группа',
             align: 'start',
             value: 'to_lecture_group_name'
           },
           { 
-            text: 'Практическая группа',
+            title: 'Практическая группа',
             align: 'start',
             value: 'to_practice_group_name'
           },
           { 
-            text: 'Лабораторная группа',
+            title: 'Лабораторная группа',
             align: 'start',
             value: 'to_lab_group_name'
           },
           { 
-            text: 'Консультационная группа',
+            title: 'Консультационная группа',
             align: 'start',
             value: 'to_consultation_group_name'
           },
           { 
-            text: 'Статус',
+            title: 'Статус',
             align: 'center',
             value: 'status',
             width: '120px'
           },
           { 
-            text: 'Приоритет',
+            title: 'Приоритет',
             align: 'center',
             value: 'priority',
             width: '100px'
