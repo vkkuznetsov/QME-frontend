@@ -98,7 +98,7 @@ function goToCourse() {
   left: 0;
   height: 5px;
   width: 100%;
-  background-color: #6ba5e2;
+  background-color: #26FD00FF;
 }
 
 .course-card__content {

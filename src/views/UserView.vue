@@ -17,7 +17,7 @@
           <v-select
               v-model="selectedCluster"
               :items="allClusterItems"
-              label="Фильтр по кластеру"
+              label="Область знаний"
               outlined
               dense
               clearable
