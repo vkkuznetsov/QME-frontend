@@ -1,21 +1,21 @@
 import {createRouter, createWebHistory} from 'vue-router';
 
 import LoginView from '../views/LoginView.vue';
-import UserView from '../views/UserView.vue';
+import UserMainView from '../views/UserMainView.vue';
 import AdminView from '../views/AdminView.vue';
 import AdminRequestsView from '../views/AdminRequestsView.vue';
 import AdminSettingsView from '../views/AdminSettingsView.vue';
 import UserProfileView from '../views/UserProfileView.vue';
 import CourseDetail from '../views/CourseDetail.vue';
-import RequestView from '../views/RequestView.vue';
+import UserRequestView from '../views/UserRequestView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
-import StatisticView from '../views/StatisticView.vue';
+import UserStatisticView from '../views/UserStatisticView.vue';
 
 const routes = [
     {
         path: '/',
-        name: 'UserView',
-        component: UserView,
+        name: 'UserMainView',
+        component: UserMainView,
         meta: {requiresAuth: true, role: 'user'},
     },
     {
@@ -31,8 +31,8 @@ const routes = [
     },
     {
         path:'/statistics',
-        name:'StatisticView',
-        component: StatisticView,
+        name:'UserStatisticView',
+        component: UserStatisticView,
     },
     {
         path: '/admin/settings',
@@ -62,7 +62,7 @@ const routes = [
     {
         path: '/requests',
         name: 'RequestView',
-        component: RequestView,
+        component: UserRequestView,
         meta: {requiresAuth: true, role: 'user'}
     },
     {

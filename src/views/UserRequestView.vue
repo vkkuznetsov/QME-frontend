@@ -85,7 +85,7 @@ import axios from 'axios';
 import RequestCard from '@/components/RequestCard.vue';
 
 export default {
-  name: 'RequestsView',
+  name: 'UserRequestsView',
   components: {
     RequestCard,
   },
@@ -305,8 +305,6 @@ export default {
 <style scoped>
 .requests-container {
   font-family: 'Montserrat', sans-serif;
-  padding: 20px 15px;
-  max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -318,10 +316,7 @@ export default {
 }
 
 .header-section {
-  margin-bottom: 24px;
-  padding: 16px;
-  background: transparent; /* Прозрачный фон */
-  border-radius: 8px;
+  margin: 0 auto;
 }
 
 .requests-title {

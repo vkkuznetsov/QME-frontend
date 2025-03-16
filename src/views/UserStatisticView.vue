@@ -68,7 +68,7 @@
   import { darkenColor, generateColorFromString } from '@/utils/colorUtils';
   
   export default {
-    name: 'RecommendationsComponent',
+    name: 'UserStatisticsView',
     components: {
       CourseCard,
     },
