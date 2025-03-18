@@ -63,7 +63,7 @@
   
   <script>
   import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+  import axiosInstance from '@/axios/axios';
   import CourseCard from '@/components/CourseCard.vue';
   import { darkenColor, generateColorFromString } from '@/utils/colorUtils';
   
@@ -73,7 +73,6 @@
       CourseCard,
     },
     setup() {
-      const API_URL = process.env.VUE_APP_API_URL;
       const user = ref({});
       const recommendations = ref([]);
       const loadingUser = ref(true);
@@ -82,7 +81,7 @@
       const fetchUserProfile = async () => {
         try {
           const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
-          const response = await axios.get(`${API_URL}/student_info`, { params: { email } });
+          const response = await axiosInstance.get(`/student_info`, { params: { email } });
           user.value = response.data;
         } catch (error) {
           console.error('Ошибка загрузки пользователя:', error);
@@ -94,7 +93,7 @@
       const fetchRecommendations = async (direction) => {
         loadingRecommendations.value = true;
         try {
-          const response = await axios.get(`${API_URL}/recomendation/${encodeURIComponent(direction)}`);
+          const response = await axiosInstance.get(`/recomendation/${encodeURIComponent(direction)}`);
           recommendations.value = response.data;
         } catch (error) {
           console.error('Ошибка загрузки рекомендаций:', error);

@@ -82,9 +82,8 @@
 
 <script>
 /* eslint-disable */
-import axios from 'axios';
+import axiosInstance from '@/axios/axios';
 
-const API_URL = process.env.VUE_APP_API_URL;
 
 export default {
   name: 'AdminSettingsView',
@@ -93,11 +92,11 @@ export default {
       activeTab: 'general',
       journalData: [],
       headers: [
-        { title: 'ID', key: 'id' },
-        { title: 'Статус', key: 'status' },
-        { title: 'Дата создания', key: 'created_at' },
-        { title: 'Тип', key: 'type' },
-        { title: 'Сообщение', key: 'message' },
+        {title: 'ID', key: 'id'},
+        {title: 'Статус', key: 'status'},
+        {title: 'Дата создания', key: 'created_at'},
+        {title: 'Тип', key: 'type'},
+        {title: 'Сообщение', key: 'message'},
       ],
       selectedFile: null,
       isLoading: false,
@@ -118,7 +117,7 @@ export default {
     },
     async fetchJournalData() {
       try {
-        const response = await axios.get(`${API_URL}/journal`);
+        const response = await axiosInstance.get(`/journal`);
         this.journalData = response.data;
       } catch (error) {
         console.error('Ошибка при получении данных журнала:', error);
@@ -139,8 +138,8 @@ export default {
         formData.append('file', this.selectedFile);
         console.log(this.selectedFile);
         console.log(formData)
-        const response = await axios.post(
-            `${API_URL}/upload/student-choices`,
+        const response = await axiosInstance.post(
+            `/upload/student-choices`,
             formData,
             {
               headers: {

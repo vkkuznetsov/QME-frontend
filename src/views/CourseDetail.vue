@@ -141,7 +141,7 @@
 <script>
 import {computed, ref, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
-import axios from 'axios';
+import axiosInstance from '@/axios/axios';
 import GroupItem from '@/components/GroupItem.vue';
 import {generateColorFromString, darkenColor} from '@/utils/colorUtils';
 
@@ -201,12 +201,11 @@ export default {
       expandedGroups.value[groupId] = !expandedGroups.value[groupId];
     };
 
-    const API_URL = process.env.VUE_APP_API_URL;
 
     // Запросы данных
     async function fetchCourse() {
       try {
-        const response = await axios.get(`${API_URL}/elective/${courseId}`);
+        const response = await axiosInstance.get(`/elective/${courseId}`);
         course.value = response.data;
       } catch (err) {
         console.error(err);
@@ -217,7 +216,7 @@ export default {
     async function fetchGroups() {
       loading.value = true;
       try {
-        const response = await axios.get(`${API_URL}/elective/${courseId}/groups`);
+        const response = await axiosInstance.get(`/elective/${courseId}/groups`);
         groups.value = response.data;
       } catch (err) {
         error.value = 'Ошибка загрузки групп';
@@ -231,7 +230,7 @@ export default {
       try {
 
         const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
-        const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
+        const response = await axiosInstance.get(`/student_info`, {params: {email}});
         currentUser.value = response.data;
         await fetchSourceCourses();
       } catch (err) {
@@ -316,7 +315,7 @@ export default {
 
         console.log('Отправка данных:', requestBody);
 
-        await axios.post(`${API_URL}/transfer`, requestBody);
+        await axiosInstance.post(`/transfer`, requestBody);
 
         // ... остальной код
       } catch (err) {

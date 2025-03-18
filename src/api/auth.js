@@ -1,15 +1,13 @@
-import axios from 'axios';
-
-const API_URL = process.env.VUE_APP_API_URL;
+import axiosInstance from '@/axios/axios';
 
 export default {
   sendOtp(email) {
-    return axios.post(`${API_URL}/auth/send-otp`, { email });
+    return axiosInstance.post('/auth/send-otp', { email });
   },
   verifyOtp(email, code) {
-    return axios.post(`${API_URL}/auth/verify-otp`, { email, code });
+    return axiosInstance.post('/auth/verify-otp', { email, code });
   },
   superUserLogin(login, password) {
-    return axios.post(`${API_URL}/auth/verify-superuser`, { login, password });
+    return axiosInstance.post('/auth/verify-superuser', { login, password });
   },
 };

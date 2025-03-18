@@ -54,9 +54,7 @@
 <script setup>
 /* eslint-disable */
 import { computed } from 'vue';
-import axios from 'axios';
-
-const API_URL = process.env.VUE_APP_API_URL;
+import axiosInstance from '@/axios/axios';
 
 const props = defineProps({
   req: {
@@ -101,7 +99,7 @@ const cancelRequest = async () => {
   }
   try {
     // DELETE /api/requests/:id
-    await axios.delete(`${API_URL}/transfer/${props.req.id}`);
+    await axiosInstance.delete(`/transfer/${props.req.id}`);
 
     // Говорим родителю «я удалена»
     emit('request-canceled', props.req.id);

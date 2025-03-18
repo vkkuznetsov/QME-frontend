@@ -61,8 +61,8 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import {ref, computed, onMounted} from 'vue';
+import axiosInstance from '@/axios/axios';
 import CourseCard from '@/components/CourseCard.vue';
 
 export default {
@@ -71,7 +71,6 @@ export default {
     CourseCard,
   },
   setup() {
-    const API_URL = process.env.VUE_APP_API_URL;
     const courses = ref([]);
     const searchQuery = ref('');
     const selectedCluster = ref(null);
@@ -80,7 +79,7 @@ export default {
 
     const fetchCourses = async () => {
       try {
-        const response = await axios.get(`${API_URL}/all_elective`);
+        const response = await axiosInstance.get(`/all_elective`);
         courses.value = response.data;
       } catch (error) {
         console.error('Ошибка загрузки курсов:', error);
@@ -117,7 +116,7 @@ export default {
     const changePage = (page) => {
       if (page > 0 && page <= totalPages.value) {
         currentPage.value = page;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }
     };
 

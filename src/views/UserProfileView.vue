@@ -90,7 +90,7 @@
 
 <script>
 import {ref, reactive, computed, onMounted} from 'vue';
-import axios from 'axios';
+import axiosInstance from '@/axios/axios';
 
 export default {
   name: 'UserProfileView',
@@ -107,12 +107,11 @@ export default {
     // Состояния загрузки и ошибки
     const loading = ref(true);
     const error = ref(null);
-    const API_URL = process.env.VUE_APP_API_URL;
 
     // Получение профиля пользователя
     const fetchUserProfile = async (email) => {
       try {
-        const response = await axios.get(`${API_URL}/student_info`, {params: {email}});
+        const response = await axiosInstance.get(`/student_info`, {params: {email}});
         Object.assign(user, response.data);
       } catch (err) {
         console.error(err);

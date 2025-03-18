@@ -81,7 +81,7 @@
 
 <script>
 import {ref, reactive, onMounted} from 'vue';
-import axios from 'axios';
+import axiosInstance from '@/axios/axios';
 import RequestCard from '@/components/RequestCard.vue';
 
 export default {
@@ -103,14 +103,12 @@ export default {
     const draggedIndex = reactive({});
     const dragOverIndex = reactive({});
 
-    // Загрузка пользователя
-    const API_URL = process.env.VUE_APP_API_URL;
 
     async function loadCurrentUser() {
       try {
         const userEmail =
             localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
-        const resp = await axios.get(`${API_URL}/student_info`, {
+        const resp = await axiosInstance.get(`/student_info`, {
           params: {email: userEmail},
         });
         userId.value = resp.data.id;
@@ -125,7 +123,7 @@ export default {
       loadingRequests.value = true;
       requestsError.value = null;
       try {
-        const resp = await axios.get(`${API_URL}/transfer`, {
+        const resp = await axiosInstance.get(`/transfer`, {
           params: {student_id: userId.value},
         });
         userRequests.value = resp.data;
@@ -259,8 +257,8 @@ export default {
         id: r.id,
         priority: r.priority,
       }));
-      axios
-          .post('/api/requests/reorder', {
+      axiosInstance
+          .post('/requests/reorder', {
             sourceElectiveId,
             items: updatedPriorities,
           })
