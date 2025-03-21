@@ -35,6 +35,10 @@ const switchRole = (role) => {
   localStorage.setItem('role', role);
   currentRole.value = role;
   
+  // Устанавливаем данные авторизации
+  localStorage.setItem('isAuthenticated', 'true');
+  localStorage.setItem('userEmail', 'stud0000288216@study.utmn.ru');
+  
   if (role === 'admin') {
     router.push('/admin');
   } else {
