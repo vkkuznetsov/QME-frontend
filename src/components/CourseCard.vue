@@ -2,7 +2,7 @@
   <div class="course-card" @click="goToCourse">
     <div class="blue-stripe"></div>
     <div class="course-card__content">
-      <h3 class="course-title">{{ course.name }}</h3>
+      <h3 class="course-title" title="Название электива">{{ course.name }}</h3>
 
       <!-- Блок дополнительной информации -->
       <div v-if="additionalText" class="additional-info">
@@ -12,12 +12,13 @@
       <span
           class="course-cluster"
           :style="{ backgroundColor: clusterColor, color: textColor }"
+          title="Область знаний"
       >
         {{ course.cluster }}
       </span>
 
       <!-- Новый элемент для числа в правом нижнем углу -->
-      <span class="free-spots">{{ course.free_spots }}</span>
+      <span class="free-spots" title="Свободные места">{{ course.free_spots }}</span>
     </div>
   </div>
 </template>
@@ -138,9 +139,12 @@ function goToCourse() {
 .free-spots {
   position: absolute;
   bottom: 10px;
-  right: 10px;
+  right: 16px;
   font-size: 12px;
   font-weight: bold;
-  color: #1f9100;
+  color: #ffffff;
+  background-color: #1f9100;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 </style>
