@@ -12,12 +12,14 @@
         </div>
       </template>
     </v-main>
+    <role-switcher />
   </v-app>
 </template>
 
 <script>
 import UserHeader from './components/UserHeader.vue';
 import AdminHeader from './components/AdminHeader.vue';
+import RoleSwitcher from './components/RoleSwitcher.vue';
 import { useRoute } from 'vue-router';
 import { ref, computed, watch } from 'vue';
 
@@ -26,6 +28,7 @@ export default {
   components: {
     UserHeader,
     AdminHeader,
+    RoleSwitcher
   },
   setup() {
     const route = useRoute();
@@ -64,5 +67,6 @@ export default {
   width: 65%;
   margin: 0 auto;
   margin-top: 30px;
+  padding-bottom: 60px;
 }
 </style>
