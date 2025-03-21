@@ -103,65 +103,17 @@ const loading = ref(true);
 const expanded = ref([]);
 
 const headers = [
-  {
-    title: 'ID',
-    align: 'start',
-    sortable: true,
-    value: 'id',
-    width: '80px'
-  },
-  {
-    title: 'ФИО студента',
-    align: 'start',
-    value: 'student_fio',
-    width: '200px'
-  },
-  {
-    title: 'Откуда',
-    align: 'start',
-    value: 'from_elective_name'
-  },
-  {
-    title: 'Куда',
-    align: 'start',
-    value: 'to_elective_name'
-  },
-  {
-    title: 'Лекционная группа',
-    align: 'start',
-    value: 'to_lecture_group_name'
-  },
-  {
-    title: 'Практическая группа',
-    align: 'start',
-    value: 'to_practice_group_name'
-  },
-  {
-    title: 'Лабораторная группа',
-    align: 'start',
-    value: 'to_lab_group_name'
-  },
-  {
-    title: 'Консультационная группа',
-    align: 'start',
-    value: 'to_consultation_group_name'
-  },
-  {
-    title: 'Статус',
-    align: 'center',
-    value: 'status',
-    width: '120px'
-  },
-  {
-    title: 'Приоритет',
-    align: 'center',
-    value: 'priority',
-    width: '100px'
-  },
-  {
-    title: '',
-    value: 'data-table-expand'
-  }
+  { title: 'ID', align: 'start', sortable: true, value: 'id', width: '80px' },
+  { title: 'ФИО студента', align: 'start', value: 'student_fio', width: '200px' },
+  { title: 'Откуда', align: 'start', value: 'from_elective_name' },
+  { title: 'Куда', align: 'start', value: 'to_elective_name' },
+  { title: 'Лекционная группа', align: 'start', value: 'to_lecture_group_name' },
+  { title: 'Практическая группа', align: 'start', value: 'to_practice_group_name' },
+  { title: 'Лабораторная группа', align: 'start', value: 'to_lab_group_name' },
+  { title: 'Консультационная группа', align: 'start', value: 'to_consultation_group_name' },
+  { title: 'Статус', align: 'center', value: 'status', width: '120px' },
+  { title: 'Приоритет', align: 'center', value: 'priority', width: '100px' },
+  { title: '', value: 'data-table-expand' }
 ];
 
 const fetchTransfers = async () => {
