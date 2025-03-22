@@ -278,48 +278,22 @@ export default {
 
       submitting.value = true;
       try {
-        // Маппинг русских названий на английские
-        const typeMapping = {
-          'лекции': 'lecture',
-          'практики': 'practice',
-          'лабораторные': 'lab',
-          'консультации': 'consultation'
-        };
-
-        const groupParams = {
-          to_lecture_group_id: null,
-          to_practice_group_id: null,
-          to_lab_group_id: null,
-          to_consultation_group_id: null
-        };
-
-        Object.values(selectedGroups.value).forEach(groupId => {
-          const group = groups.value.find(g => g.id === groupId);
-          if (group) {
-            // Приводим к нижнему регистру и преобразуем
-            const ruType = group.type.toLowerCase().trim();
-            const enType = typeMapping[ruType];
-
-            const paramName = `to_${enType}_group_id`;
-
-            groupParams[paramName] = groupId;
-          }
-        });
+        // Формируем массив групп, которые пользователь выбрал для «to»
+        const groupIds = Object.values(selectedGroups.value).map(groupId => Number(groupId));
 
         const requestBody = {
           student_id: Number(currentUser.value.id),
           from_elective_id: Number(selectedSourceCourse.value),
           to_elective_id: Number(courseId),
-          ...groupParams
+          groups_to_ids: groupIds,
         };
 
         console.log('Отправка данных:', requestBody);
 
         await axiosInstance.post(`/transfer`, requestBody);
-
-        // ... остальной код
+        
       } catch (err) {
-        // ... обработка ошибок
+        submitError.value = err.response?.data?.message || 'Ошибка отправки данных';
       } finally {
         submitting.value = false;
       }
