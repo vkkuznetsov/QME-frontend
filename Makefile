@@ -18,3 +18,7 @@ clean:
 	docker rmi $(IMAGE_NAME):$(TAG)\
 
 rel: stop clean build run
+
+dev:
+	npm run build && npx serve -p 80
+
