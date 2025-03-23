@@ -7,6 +7,7 @@
           :headers="headers"
           :items="transfers"
           :loading="loading"
+          :search="search"
           class="elevation-2 rounded"
           :items-per-page="10"
           :footer-props="{
@@ -19,6 +20,15 @@
           <v-toolbar flat color="primary" dark>
             <v-toolbar-title>Список заявок</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
+            <v-text-field
+                v-model="search"
+                append-icon="mdi-magnify"
+                label="Поиск по ФИО"
+                single-line
+                hide-details
+                class="mr-4"
+                style="max-width: 300px"
+            ></v-text-field>
             <v-spacer></v-spacer>
             <v-btn
                 color="white"
@@ -32,50 +42,48 @@
           </v-toolbar>
         </template>
 
-        <!-- Пример шаблонов для отдельных столбцов -->
-        <template #[`item.to_lecture_group_name`]="{ value }">
-          {{ value || "—" }}
+        <template #[`item.groups_from`]="{ item }">
+          <div v-for="(group, index) in item.groups_from" :key="index">
+            {{ group[0] }} ({{ group[1] }})
+          </div>
         </template>
-        <template #[`item.to_practice_group_name`]="{ value }">
-          {{ value || "—" }}
+
+        <template #[`item.groups_to`]="{ item }">
+          <div v-for="(group, index) in item.groups_to" :key="index">
+            {{ group[0] }} ({{ group[1] }})
+          </div>
         </template>
-        <template #[`item.to_lab_group_name`]="{ value }">
-          {{ value || "—" }}
-        </template>
-        <template #[`item.to_consultation_group_name`]="{ value }">
-          {{ value || "—" }}
-        </template>
+
         <template #[`item.status`]="{ item }">
           <v-chip
               :color="getStatusColor(item.status)"
               small
               class="text-capitalize"
           >
-            {{ item.status }}
+            {{ translateStatus(item.status) }}
           </v-chip>
         </template>
 
-        
         <template #[`item.actions`]="{ item }">
-  <v-btn
-      color="error"
-      @click="rejectTransfer(item.id)"
-      :loading="item.loading"
-  >
-    <v-icon size="18" left>mdi-close</v-icon>
-  </v-btn>
+          <template v-if="item.status.toLowerCase() === 'pending'">
+            <v-btn
+                color="error"
+                @click="rejectTransfer(item.id)"
+                :loading="item.loading"
+            >
+              <v-icon size="18" left>mdi-close</v-icon>
+            </v-btn>
 
-  <v-btn
-      color="success"
-      @click="approveTransfer(item.id)"
-      :loading="item.loading"
-      class="ml-2"
-  >
-    <v-icon size="18" left>mdi-check</v-icon>
-  </v-btn>
-</template>
-
-
+            <v-btn
+                color="success"
+                @click="approveTransfer(item.id)"
+                :loading="item.loading"
+                class="ml-2"
+            >
+              <v-icon size="18" left>mdi-check</v-icon>
+            </v-btn>
+          </template>
+        </template>
 
       </v-data-table>
     </main>
@@ -88,17 +96,17 @@ import axiosInstance from '@/axios/axios';
 
 const transfers = ref([]);
 const loading = ref(true);
+const search = ref('');
 
 const headers = [
   { title: 'ID', align: 'start', sortable: true, value: 'id', width: '80px' },
   { title: 'ФИО студента', align: 'start', value: 'student_fio', width: '200px' },
   { title: 'Из электива', align: 'start', value: 'from_elective_name' },
   { title: 'В электив', align: 'start', value: 'to_elective_name' },
-  { title: 'Лек.', align: 'start', value: 'to_lecture_group_name' },
-  { title: 'Практ.', align: 'start', value: 'to_practice_group_name' },
-  { title: 'Лаб.', align: 'start', value: 'to_lab_group_name' },
-  { title: 'Кон.', align: 'start', value: 'to_consultation_group_name' },
-  { title: 'Статус', align: 'center', value: 'status', width: '120px' },
+  { title: 'Группы (из)', align: 'start', value: 'groups_from' },
+  { title: 'Группы (в)', align: 'start', value: 'groups_to' },
+  { title: 'Приоритет', align: 'center', value: 'priority', width: '100px' },
+  { title: 'Статус', align: 'center', sortable: true, value: 'status', width: '120px' },
   { title: '', align: 'center', value: 'actions', width: '300px' }
 ];
 
@@ -108,7 +116,6 @@ const fetchTransfers = async () => {
     const response = await axiosInstance.get(`/all_transfer`);
     transfers.value = response.data.map(t => ({
       ...t,
-      status: translateStatus(t.status),
       loading: false
     }));
   } catch (error) {
@@ -148,11 +155,10 @@ const rejectTransfer = async (id) => {
 
 const getStatusColor = (status) => {
   switch (status.toLowerCase()) {
-    case 'одобрено':
+    case 'approved':
       return 'success';
-    case 'отклонено':
+    case 'rejected':
       return 'error';
-    case 'в обработке':
     case 'pending':
       return 'warning';
     default:
