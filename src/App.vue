@@ -64,7 +64,7 @@ export default {
 }
 
 .main-container {
-  width: 65%;
+  width: 90%;
   margin: 0 auto;
   margin-top: 30px;
   padding-bottom: 60px;

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="table-container">
     <main>
       <h1 class="mb-4">Заявки на перевод</h1>
 
@@ -13,8 +13,6 @@
             'items-per-page-options': [5, 10, 15, 20],
             'items-per-page-text': 'Строк на странице'
           }"
-          v-model:expanded="expanded"
-          show-expand
           item-key="id"
       >
         <template #top>
@@ -34,22 +32,19 @@
           </v-toolbar>
         </template>
 
+        <!-- Пример шаблонов для отдельных столбцов -->
         <template #[`item.to_lecture_group_name`]="{ value }">
           {{ value || "—" }}
         </template>
-
         <template #[`item.to_practice_group_name`]="{ value }">
           {{ value || "—" }}
         </template>
-
         <template #[`item.to_lab_group_name`]="{ value }">
           {{ value || "—" }}
         </template>
-
         <template #[`item.to_consultation_group_name`]="{ value }">
           {{ value || "—" }}
         </template>
-
         <template #[`item.status`]="{ item }">
           <v-chip
               :color="getStatusColor(item.status)"
@@ -60,34 +55,27 @@
           </v-chip>
         </template>
 
-        <template #expanded-row="{ item }">
-          <v-card flat>
-            <v-card-text>
-              <v-row justify="center" align="center">
-                <v-col cols="auto">
-                  <v-btn
-                      color="success"
-                      @click="approveTransfer(item.id)"
-                      :loading="item.loading"
-                  >
-                    <v-icon left>mdi-check</v-icon>
-                    Подтвердить
-                  </v-btn>
-                </v-col>
-                <v-col cols="auto">
-                  <v-btn
-                      color="error"
-                      @click="rejectTransfer(item.id)"
-                      :loading="item.loading"
-                  >
-                    <v-icon left>mdi-close</v-icon>
-                    Отклонить
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </template>
+        
+        <template #[`item.actions`]="{ item }">
+  <v-btn
+      color="error"
+      @click="rejectTransfer(item.id)"
+      :loading="item.loading"
+  >
+    <v-icon size="18" left>mdi-close</v-icon>
+  </v-btn>
+
+  <v-btn
+      color="success"
+      @click="approveTransfer(item.id)"
+      :loading="item.loading"
+      class="ml-2"
+  >
+    <v-icon size="18" left>mdi-check</v-icon>
+  </v-btn>
+</template>
+
+
 
       </v-data-table>
     </main>
@@ -95,25 +83,23 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
+import { ref } from 'vue';
 import axiosInstance from '@/axios/axios';
 
 const transfers = ref([]);
 const loading = ref(true);
-const expanded = ref([]);
 
 const headers = [
   { title: 'ID', align: 'start', sortable: true, value: 'id', width: '80px' },
   { title: 'ФИО студента', align: 'start', value: 'student_fio', width: '200px' },
-  { title: 'Откуда', align: 'start', value: 'from_elective_name' },
-  { title: 'Куда', align: 'start', value: 'to_elective_name' },
-  { title: 'Лекционная группа', align: 'start', value: 'to_lecture_group_name' },
-  { title: 'Практическая группа', align: 'start', value: 'to_practice_group_name' },
-  { title: 'Лабораторная группа', align: 'start', value: 'to_lab_group_name' },
-  { title: 'Консультационная группа', align: 'start', value: 'to_consultation_group_name' },
+  { title: 'Из электива', align: 'start', value: 'from_elective_name' },
+  { title: 'В электив', align: 'start', value: 'to_elective_name' },
+  { title: 'Лек.', align: 'start', value: 'to_lecture_group_name' },
+  { title: 'Практ.', align: 'start', value: 'to_practice_group_name' },
+  { title: 'Лаб.', align: 'start', value: 'to_lab_group_name' },
+  { title: 'Кон.', align: 'start', value: 'to_consultation_group_name' },
   { title: 'Статус', align: 'center', value: 'status', width: '120px' },
-  { title: 'Приоритет', align: 'center', value: 'priority', width: '100px' },
-  { title: '', value: 'data-table-expand' }
+  { title: '', align: 'center', value: 'actions', width: '300px' }
 ];
 
 const fetchTransfers = async () => {
@@ -187,13 +173,14 @@ fetchTransfers();
 </script>
 
 <style scoped>
-main {
+/* Контейнер для таблицы, чтобы занимала почти весь экран */
+.table-container {
+  height: 80vh;
+  overflow: auto;
   padding: 20px;
-  font-family: Arial, sans-serif;
 }
 
 .v-data-table {
-  margin-top: 20px;
   background-color: #fff !important;
 }
 
