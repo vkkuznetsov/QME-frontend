@@ -79,225 +79,189 @@
   </v-container>
 </template>
 
-<script>
-import {ref, reactive, onMounted} from 'vue';
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
 import axiosInstance from '@/axios/axios';
 import RequestCard from '@/components/RequestCard.vue';
 
-export default {
-  name: 'UserRequestsView',
-  components: {
-    RequestCard,
-  },
-  setup() {
-    // Локальные состояния
-    const userId = ref(null);
-    const userRequests = ref([]);
-    const loadingRequests = ref(false);
-    const requestsError = ref(null);
+// Локальные состояния
+const userId = ref(null);
+const userRequests = ref([]);
+const loadingRequests = ref(false);
+const requestsError = ref(null);
 
-    // Группированные заявки
-    const groupsData = reactive({});
+// Группированные заявки
+const groupsData = reactive({});
 
-    // DnD: храним индексы
-    const draggedIndex = reactive({});
-    const dragOverIndex = reactive({});
+// DnD: храним индексы
+const draggedIndex = reactive({});
+const dragOverIndex = reactive({});
 
-
-    async function loadCurrentUser() {
-      try {
-        const userEmail =
-            localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
-        const resp = await axiosInstance.get(`/student_info`, {
-          params: {email: userEmail},
-        });
-        userId.value = resp.data.id;
-      } catch (err) {
-        console.error('Ошибка при загрузке пользователя', err);
-      }
-    }
-
-    // Загрузка заявок для этого пользователя
-    async function fetchRequests() {
-      if (!userId.value) return;
-      loadingRequests.value = true;
-      requestsError.value = null;
-      try {
-        const resp = await axiosInstance.get(`/transfer`, {
-          params: {student_id: userId.value},
-        });
-        userRequests.value = resp.data;
-        buildGroups();
-      } catch (err) {
-        console.error(err);
-        requestsError.value = 'Не удалось загрузить ваши заявки';
-      } finally {
-        loadingRequests.value = false;
-      }
-    }
-
-    // Инициализация
-    onMounted(async () => {
-      await loadCurrentUser();
-      if (userId.value) {
-        fetchRequests();
-      }
+async function loadCurrentUser() {
+  try {
+    const userEmail =
+        localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
+    const resp = await axiosInstance.get(`/student_info`, {
+      params: { email: userEmail },
     });
+    userId.value = resp.data.id;
+  } catch (err) {
+    console.error('Ошибка при загрузке пользователя', err);
+  }
+}
 
-    // Формируем объект groupsData
-    function buildGroups() {
-      // Очищаем прежние данные
-      for (const k in groupsData) {
-        delete groupsData[k];
-      }
-      // Раскладываем userRequests по sourceElectiveId
-      userRequests.value.forEach((req) => {
-        const id = req.sourceElectiveId;
-        if (!id) return;
-        if (!groupsData[id]) {
-          groupsData[id] = {
-            name: req.sourceElectiveName || 'Неизвестный электив',
-            requests: [],
-          };
-        }
-        groupsData[id].requests.push(req);
+// Загрузка заявок для этого пользователя
+async function fetchRequests() {
+  if (!userId.value) return;
+  loadingRequests.value = true;
+  requestsError.value = null;
+  try {
+    const resp = await axiosInstance.get(`/transfer`, {
+      params: { student_id: userId.value },
+    });
+    userRequests.value = resp.data;
+    buildGroups();
+  } catch (err) {
+    console.error(err);
+    requestsError.value = 'Не удалось загрузить ваши заявки';
+  } finally {
+    loadingRequests.value = false;
+  }
+}
+
+onMounted(async () => {
+  await loadCurrentUser();
+  if (userId.value) {
+    fetchRequests();
+  }
+});
+
+// Формируем объект groupsData
+function buildGroups() {
+  // Очищаем прежние данные
+  for (const k in groupsData) {
+    delete groupsData[k];
+  }
+  // Раскладываем userRequests по sourceElectiveId
+  userRequests.value.forEach((req) => {
+    const id = req.sourceElectiveId;
+    if (!id) return;
+    if (!groupsData[id]) {
+      groupsData[id] = {
+        name: req.sourceElectiveName || 'Неизвестный электив',
+        requests: [],
+      };
+    }
+    groupsData[id].requests.push(req);
+  });
+
+  // Сортируем
+  for (const sourceId in groupsData) {
+    const group = groupsData[sourceId];
+    const arr = group.requests;
+    // Если есть «Одобрено», оставляем только его
+    const approved = arr.find((r) => r.status === 'Одобрено');
+    if (approved) {
+      group.requests = [approved];
+    } else {
+      // Иначе, «Отклонено» в конце, остальные по приоритету
+      arr.sort((a, b) => {
+        if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
+        if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
+        return (a.priority || 0) - (b.priority || 0);
       });
-
-      // Сортируем
-      for (const sourceId in groupsData) {
-        const group = groupsData[sourceId];
-        const arr = group.requests;
-        // Если есть «Одобрено», оставляем только его
-        const approved = arr.find((r) => r.status === 'Одобрено');
-        if (approved) {
-          group.requests = [approved];
-        } else {
-          // Иначе, «Отклонено» в конце, остальные по приоритету
-          arr.sort((a, b) => {
-            if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
-            if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
-            return (a.priority || 0) - (b.priority || 0);
-          });
-        }
-      }
     }
+  }
+}
 
-    // DnD Logic
-    function isDraggable(req) {
-      return req.status === 'Ожидается';
-    }
+// DnD Logic
+function isDraggable(req) {
+  return req.status === 'Ожидается';
+}
 
-    function onDragStart(e, sourceElectiveId, index) {
-      draggedIndex[sourceElectiveId] = index;
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', '');
-    }
+function onDragStart(e, sourceElectiveId, index) {
+  draggedIndex[sourceElectiveId] = index;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', '');
+}
 
-    function onDragEnter(e, sourceElectiveId, index) {
-      dragOverIndex[sourceElectiveId] = index;
-    }
+function onDragEnter(e, sourceElectiveId, index) {
+  dragOverIndex[sourceElectiveId] = index;
+}
 
-    function onDragLeave(e, sourceElectiveId, index) {
-      if (dragOverIndex[sourceElectiveId] === index) {
-        dragOverIndex[sourceElectiveId] = null;
-      }
-    }
+function onDragLeave(e, sourceElectiveId, index) {
+  if (dragOverIndex[sourceElectiveId] === index) {
+    dragOverIndex[sourceElectiveId] = null;
+  }
+}
 
-    function onDragOver(e, sourceElectiveId, index) {
-      e.preventDefault();
-      dragOverIndex[sourceElectiveId] = index;
-    }
+function onDragOver(e, sourceElectiveId, index) {
+  e.preventDefault();
+  dragOverIndex[sourceElectiveId] = index;
+}
 
-    // SWAP
-    function onDrop(e, sourceElectiveId, dropIndex) {
-      const fromIndex = draggedIndex[sourceElectiveId];
-      if (fromIndex == null || dropIndex == null) return;
-      const group = groupsData[sourceElectiveId];
-      if (!group) return;
+// SWAP
+function onDrop(e, sourceElectiveId, dropIndex) {
+  const fromIndex = draggedIndex[sourceElectiveId];
+  if (fromIndex == null || dropIndex == null) return;
+  const group = groupsData[sourceElectiveId];
+  if (!group) return;
 
-      const arr = group.requests;
-      // Не даём SWAP с «Отклонено»
-      if (
-          arr[fromIndex].status === 'Отклонено' ||
-          arr[dropIndex].status === 'Отклонено'
-      ) {
-        return;
-      }
-      // Меняем местами
-      if (fromIndex !== dropIndex) {
-        const tmp = arr[fromIndex];
-        arr[fromIndex] = arr[dropIndex];
-        arr[dropIndex] = tmp;
-        // Пересчитываем приоритет
-        updatePriorities(sourceElectiveId);
-        // Снова сортируем отклонённые в конец
-        arr.sort((a, b) => {
-          if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
-          if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
-          return (a.priority || 0) - (b.priority || 0);
-        });
-      }
-      draggedIndex[sourceElectiveId] = null;
-      dragOverIndex[sourceElectiveId] = null;
-    }
+  const arr = group.requests;
+  // Не даём SWAP с «Отклонено»
+  if (
+      arr[fromIndex].status === 'Отклонено' ||
+      arr[dropIndex].status === 'Отклонено'
+  ) {
+    return;
+  }
+  // Меняем местами
+  if (fromIndex !== dropIndex) {
+    const tmp = arr[fromIndex];
+    arr[fromIndex] = arr[dropIndex];
+    arr[dropIndex] = tmp;
+    // Пересчитываем приоритет
+    updatePriorities(sourceElectiveId);
+    // Снова сортируем отклонённые в конец
+    arr.sort((a, b) => {
+      if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
+      if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
+      return (a.priority || 0) - (b.priority || 0);
+    });
+  }
+  draggedIndex[sourceElectiveId] = null;
+  dragOverIndex[sourceElectiveId] = null;
+}
 
-    function onDragEnd(e, sourceElectiveId) {
-      draggedIndex[sourceElectiveId] = null;
-      dragOverIndex[sourceElectiveId] = null;
-    }
+function onDragEnd(e, sourceElectiveId) {
+  draggedIndex[sourceElectiveId] = null;
+  dragOverIndex[sourceElectiveId] = null;
+}
 
-    // Обновляем приоритет на сервере
-    function updatePriorities(sourceElectiveId) {
-      const group = groupsData[sourceElectiveId];
-      if (!group) return;
-      group.requests.forEach((r, idx) => {
-        r.priority = idx + 1;
-      });
-      const updatedPriorities = group.requests.map((r) => ({
-        id: r.id,
-        priority: r.priority,
-      }));
-      axiosInstance
-          .post('/requests/reorder', {
-            sourceElectiveId,
-            items: updatedPriorities,
-          })
-          .then(() =>
-              console.log(`Приоритеты обновлены для электив ID=${sourceElectiveId}`)
-          )
-          .catch((err) => console.error('Ошибка при reorder', err));
-    }
+// Обновляем приоритет на сервере
+function updatePriorities(sourceElectiveId) {
+  const group = groupsData[sourceElectiveId];
+  if (!group) return;
+  group.requests.forEach((r, idx) => {
+    r.priority = idx + 1;
+  });
+  const updatedPriorities = group.requests.map((r) => ({
+    id: r.id,
+    priority: r.priority,
+  }));
+  axiosInstance.post('/transfer/reorder', updatedPriorities)
+      .then(() =>
+          console.log(`Приоритеты обновлены для электив ID=${sourceElectiveId}`)
+      )
+      .catch((err) => console.error('Ошибка при reorder', err));
+}
 
-    // Когда дочерний RequestCard сэмитил `request-canceled`
-    // Удаляем заявку из userRequests, затем пересобираем groupsData
-    function onRequestCanceled(id) {
-      // Убираем заявку из userRequests
-      userRequests.value = userRequests.value.filter((r) => r.id !== id);
-      // Пересобираем
-      buildGroups();
-    }
-
-    return {
-      userRequests,
-      loadingRequests,
-      requestsError,
-      groupsData,
-      draggedIndex,
-      dragOverIndex,
-
-      isDraggable,
-      onDragStart,
-      onDragEnter,
-      onDragLeave,
-      onDragOver,
-      onDrop,
-      onDragEnd,
-      updatePriorities,
-
-      onRequestCanceled,
-    };
-  },
-};
+// Когда дочерний RequestCard сэмитил `request-canceled`
+// Удаляем заявку из userRequests, затем пересобираем groupsData
+function onRequestCanceled(id) {
+  userRequests.value = userRequests.value.filter((r) => r.id !== id);
+  buildGroups();
+}
 </script>
 
 <style scoped>
