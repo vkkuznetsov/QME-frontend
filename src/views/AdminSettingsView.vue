@@ -2,9 +2,11 @@
   <v-container>
     <v-card>
       <v-tabs v-model="activeTab" background-color="primary" dark>
+        <v-tab value="general">Журнал</v-tab>
         <v-tab value="data-upload">Загрузка данных</v-tab>
       </v-tabs>
       <v-tabs-items v-model="activeTab">
+        <!-- Вкладка журнала -->
         <v-tab-item value="general">
           <v-card-text>
             <v-data-table
@@ -25,53 +27,82 @@
             </v-data-table>
           </v-card-text>
         </v-tab-item>
+
+        <!-- Вкладка загрузки данных -->
         <v-tab-item value="data-upload">
           <v-card-text>
             <v-form ref="form">
-              <!-- Загрузка первого файла -->
-              <v-file-input
-                  label="Загрузить файл (.xlsx)"
-                  accept=".xlsx"
-                  prepend-inner-icon="mdi-upload"
-                  @change="handleFileUpload($event)"
-                  :disabled="isLoading"
-              ></v-file-input>
+              <!-- Секция загрузки для student-choices -->
+              <v-card class="mb-4">
+                <v-card-title>Загрузка файла для student-choices</v-card-title>
+                <v-card-text>
+                  <v-file-input
+                      label="Выберите файл (.xlsx)"
+                      accept=".xlsx"
+                      prepend-inner-icon="mdi-upload"
+                      @change="handleFileUpload($event)"
+                      :disabled="isLoadingStudent"
+                  ></v-file-input>
+                  <v-btn
+                      color="primary"
+                      @click="uploadStudentFile"
+                      class="mt-4"
+                      :loading="isLoadingStudent"
+                      :disabled="!selectedFile"
+                  >
+                    Загрузить
+                  </v-btn>
+                  <div v-if="isLoadingStudent" class="mt-4">
+                    <v-progress-circular
+                        indeterminate
+                        color="primary"
+                        size="24"
+                        width="2"
+                    ></v-progress-circular>
+                    <span class="ml-2">Загрузка...</span>
+                  </div>
+                  <div v-if="isSuccessStudent" class="mt-4">
+                    <v-icon color="success">mdi-check-circle</v-icon>
+                    <span class="ml-2">Файл успешно загружен!</span>
+                  </div>
+                </v-card-text>
+              </v-card>
 
-              <!-- Пустышка для второго файла -->
-              <v-text-field
-                  label="Информация о втором файле"
-                  readonly
-                  hint="Этот файл не требуется."
-                  persistent-hint
-              ></v-text-field>
-
-              <!-- Кнопка загрузки -->
-              <v-btn
-                  color="primary"
-                  @click="uploadFile"
-                  class="mt-4"
-                  :loading="isLoading"
-                  :disabled="!selectedFile"
-              >
-                Загрузить
-              </v-btn>
-
-              <!-- Анимация загрузки и статус -->
-              <div v-if="isLoading" class="mt-4">
-                <v-progress-circular
-                    indeterminate
-                    color="primary"
-                    size="24"
-                    width="2"
-                ></v-progress-circular>
-                <span class="ml-2">Загрузка...</span>
-              </div>
-
-              <!-- Успешная загрузка -->
-              <div v-if="isSuccess" class="mt-4">
-                <v-icon color="success">mdi-check-circle</v-icon>
-                <span class="ml-2">Файл успешно загружен!</span>
-              </div>
+              <!-- Секция загрузки для courses-info -->
+              <v-card>
+                <v-card-title>Загрузка файла для courses-info</v-card-title>
+                <v-card-text>
+                  <v-file-input
+                      label="Выберите файл (.xlsm)"
+                      accept=".xlsm"
+                      prepend-inner-icon="mdi-upload"
+                      @change="handleFileUpload2($event)"
+                      :disabled="isLoadingCourses"
+                  ></v-file-input>
+                  <v-btn
+                      color="primary"
+                      @click="uploadCoursesFile"
+                      class="mt-4"
+                      :loading="isLoadingCourses"
+                      :disabled="!selectedFile2"
+                  >
+                    Загрузить
+                  </v-btn>
+                  <div v-if="isLoadingCourses" class="mt-4">
+                    <v-progress-circular
+                        indeterminate
+                        color="primary"
+                        size="24"
+                        width="2"
+                    ></v-progress-circular>
+                    <span class="ml-2">Загрузка...</span>
+                  </div>
+                  <div v-if="isSuccessCourses" class="mt-4">
+                    <v-icon color="success">mdi-check-circle</v-icon>
+                    <span class="ml-2">Файл успешно загружен!</span>
+                  </div>
+                </v-card-text>
+              </v-card>
             </v-form>
           </v-card-text>
         </v-tab-item>
@@ -84,7 +115,6 @@
 /* eslint-disable */
 import axiosInstance from '@/axios/axios';
 
-
 export default {
   name: 'AdminSettingsView',
   data() {
@@ -92,15 +122,20 @@ export default {
       activeTab: 'general',
       journalData: [],
       headers: [
-        {title: 'ID', key: 'id'},
-        {title: 'Статус', key: 'status'},
-        {title: 'Дата создания', key: 'created_at'},
-        {title: 'Тип', key: 'type'},
-        {title: 'Сообщение', key: 'message'},
+        { title: 'ID', key: 'id' },
+        { title: 'Статус', key: 'status' },
+        { title: 'Дата создания', key: 'created_at' },
+        { title: 'Тип', key: 'type' },
+        { title: 'Сообщение', key: 'message' },
       ],
+      // Файл для student-choices
       selectedFile: null,
-      isLoading: false,
-      isSuccess: false,
+      isLoadingStudent: false,
+      isSuccessStudent: false,
+      // Файл для courses-info
+      selectedFile2: null,
+      isLoadingCourses: false,
+      isSuccessCourses: false,
     };
   },
   methods: {
@@ -117,7 +152,7 @@ export default {
     },
     async fetchJournalData() {
       try {
-        const response = await axiosInstance.get(`/journal`);
+        const response = await axiosInstance.get('/journal');
         this.journalData = response.data;
       } catch (error) {
         console.error('Ошибка при получении данных журнала:', error);
@@ -125,31 +160,30 @@ export default {
     },
     handleFileUpload(event) {
       this.selectedFile = event.target.files[0];
-      this.isSuccess = false; // Сбрасываем статус успеха при выборе нового файла
+      this.isSuccessStudent = false;
     },
-    async uploadFile() {
+    handleFileUpload2(event) {
+      this.selectedFile2 = event.target.files[0];
+      this.isSuccessCourses = false;
+    },
+    async uploadStudentFile() {
       if (!this.selectedFile) {
-        alert('Пожалуйста, выберите файл.');
+        alert('Пожалуйста, выберите файл для загрузки.');
         return;
       }
-      this.isLoading = true;
+      this.isLoadingStudent = true;
       try {
         const formData = new FormData();
         formData.append('file', this.selectedFile);
-        console.log(this.selectedFile);
-        console.log(formData)
         const response = await axiosInstance.post(
-            `/upload/student-choices`,
+            '/upload/student-choices',
             formData,
             {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
+              headers: { 'Content-Type': 'multipart/form-data' },
             }
         );
-
         if (response.status === 200) {
-          this.isSuccess = true;
+          this.isSuccessStudent = true;
         } else {
           alert('Ошибка при загрузке файла.');
         }
@@ -157,9 +191,37 @@ export default {
         console.error('Ошибка при загрузке файла:', error);
         alert('Произошла ошибка при загрузке файла. Попробуйте еще раз.');
       } finally {
-        this.isLoading = false;
+        this.isLoadingStudent = false;
       }
-    }
+    },
+    async uploadCoursesFile() {
+      if (!this.selectedFile2) {
+        alert('Пожалуйста, выберите файл для загрузки.');
+        return;
+      }
+      this.isLoadingCourses = true;
+      try {
+        const formData = new FormData();
+        formData.append('file', this.selectedFile2);
+        const response = await axiosInstance.post(
+            '/upload/courses-info',
+            formData,
+            {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            }
+        );
+        if (response.status === 200) {
+          this.isSuccessCourses = true;
+        } else {
+          alert('Ошибка при загрузке файла.');
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке файла:', error);
+        alert('Произошла ошибка при загрузке файла. Попробуйте еще раз.');
+      } finally {
+        this.isLoadingCourses = false;
+      }
+    },
   },
   mounted() {
     this.fetchJournalData();
