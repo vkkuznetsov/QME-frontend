@@ -59,91 +59,72 @@
     </div>
   </div>
 </template>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import axiosInstance from '@/axios/axios'
+import CourseCard from '@/components/CourseCard.vue'
 
-<script>
-import {ref, computed, onMounted} from 'vue';
-import axiosInstance from '@/axios/axios';
-import CourseCard from '@/components/CourseCard.vue';
+const courses = ref([])
+const searchQuery = ref('')
+const selectedCluster = ref(null)
+const currentPage = ref(1)
+const itemsPerPage = ref(16)
 
-export default {
-  name: 'AllElectivesComponent',
-  components: {
-    CourseCard,
-  },
-  setup() {
-    const courses = ref([]);
-    const searchQuery = ref('');
-    const selectedCluster = ref(null);
-    const currentPage = ref(1);
-    const itemsPerPage = ref(16);
+// Функция загрузки курсов
+const fetchCourses = async () => {
+  try {
+    const response = await axiosInstance.get(`/all_elective`)
+    courses.value = response.data
+  } catch (error) {
+    console.error('Ошибка загрузки курсов:', error)
+  }
+}
 
-    const fetchCourses = async () => {
-      try {
-        const response = await axiosInstance.get(`/all_elective`);
-        courses.value = response.data;
-      } catch (error) {
-        console.error('Ошибка загрузки курсов:', error);
-      }
-    };
+const allClusterItems = computed(() => [
+  ...new Set(courses.value.map(course => course.cluster).filter(Boolean))
+])
 
-    const allClusterItems = computed(() => [
-      ...new Set(courses.value.map(course => course.cluster).filter(Boolean))
-    ]);
+const filteredCourses = computed(() => {
+  return courses.value.filter(course => {
+    const searchMatch =
+        !searchQuery.value ||
+        `${course.name} ${course.description || ''}`
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase())
+    const clusterMatch =
+        !selectedCluster.value || course.cluster === selectedCluster.value
+    return searchMatch && clusterMatch
+  })
+})
 
-    const filteredCourses = computed(() => {
-      return courses.value.filter(course => {
-        const searchMatch = !searchQuery.value ||
-            `${course.name} ${course.description || ''}`
-                .toLowerCase()
-                .includes(searchQuery.value.toLowerCase());
+const paginatedCourses = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredCourses.value.slice(start, end)
+})
 
-        const clusterMatch = !selectedCluster.value || course.cluster === selectedCluster.value;
+const totalPages = computed(() =>
+    Math.ceil(filteredCourses.value.length / itemsPerPage.value)
+)
 
-        return searchMatch && clusterMatch;
-      });
-    });
 
-    const paginatedCourses = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value;
-      const end = start + itemsPerPage.value;
-      return filteredCourses.value.slice(start, end);
-    });
+const changePage = (page) => {
+  if (page > 0 && page <= totalPages.value) {
+    currentPage.value = page
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
 
-    const totalPages = computed(() =>
-        Math.ceil(filteredCourses.value.length / itemsPerPage.value)
-    );
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedCluster.value = null
+  currentPage.value = 1
+}
 
-    const changePage = (page) => {
-      if (page > 0 && page <= totalPages.value) {
-        currentPage.value = page;
-        window.scrollTo({top: 0, behavior: 'smooth'});
-      }
-    };
 
-    const resetFilters = () => {
-      searchQuery.value = '';
-      selectedCluster.value = null;
-      currentPage.value = 1;
-    };
-
-    onMounted(fetchCourses);
-
-    return {
-      courses,
-      searchQuery,
-      selectedCluster,
-      currentPage,
-      itemsPerPage,
-      allClusterItems,
-      filteredCourses,
-      paginatedCourses,
-      totalPages,
-      changePage,
-      resetFilters,
-    };
-  },
-};
+onMounted(fetchCourses)
 </script>
+
 
 <style scoped>
 .section-title {
