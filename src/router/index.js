@@ -10,6 +10,7 @@ import CourseDetail from '../views/CourseDetail.vue';
 import UserRequestView from '../views/UserRequestView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import UserStatisticView from '../views/UserStatisticView.vue';
+import AdminOptimalView from '../views/AdminOptimalView.vue';
 
 const routes = [
     {
@@ -38,6 +39,12 @@ const routes = [
         path: '/admin/settings',
         name: 'AdminSettingsView',
         component: AdminSettingsView,
+        meta: {requiresAuth: true, role: 'admin'},
+    },
+    {
+        path: '/admin/optimal',
+        name: 'AdminOptimalView',
+        component: AdminOptimalView,
         meta: {requiresAuth: true, role: 'admin'},
     },
     {

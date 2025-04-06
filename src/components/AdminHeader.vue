@@ -10,6 +10,7 @@
     <div class="nav-buttons">
       <v-btn text :to="{ path: '/admin' }">Главная</v-btn>
       <v-btn text :to="{ path: '/admin/requests' }">Заявки</v-btn>
+      <v-btn text :to="{ path: '/admin/optimal' }">Автораспределение</v-btn>
       <v-btn text :to="{ path: '/admin/reports' }">Отчёты</v-btn>
       <v-btn text :to="{ path: '/admin/settings' }">Настройки</v-btn>
     </div>
