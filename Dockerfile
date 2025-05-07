@@ -1,5 +1,5 @@
 # Этап сборки
-FROM node:16-alpine as build-stage
+FROM node:23-alpine3.20 as build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
