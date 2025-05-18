@@ -16,46 +16,33 @@
   </v-app>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
+
 import UserHeader from './components/UserHeader.vue';
 import AdminHeader from './components/AdminHeader.vue';
 import RoleSwitcher from './components/RoleSwitcher.vue';
-import { useRoute } from 'vue-router';
-import { ref, computed, watch } from 'vue';
 
-export default {
-  name: 'App',
-  components: {
-    UserHeader,
-    AdminHeader,
-    RoleSwitcher
-  },
-  setup() {
-    const route = useRoute();
+const route = useRoute();
 
-    const isAuthenticated = ref(localStorage.getItem('isAuthenticated') === 'true');
-    const userRole = ref(localStorage.getItem('role'));
+const isAuthenticated = ref(localStorage.getItem('isAuthenticated') === 'true');
+const userRole = ref(localStorage.getItem('role'));
 
-    const updateAuthState = () => {
-      isAuthenticated.value = localStorage.getItem('isAuthenticated') === 'true';
-      userRole.value = localStorage.getItem('role');
-    };
-
-    watch(route, () => {
-      updateAuthState();
-    });
-
-    const showUserHeader = computed(() => isAuthenticated.value && userRole.value === 'user' && route.path !== '/login');
-    const showAdminHeader = computed(() => isAuthenticated.value && userRole.value === 'admin' && route.path !== '/login');
-
-    return {
-      showUserHeader,
-      showAdminHeader,
-      route,
-    };
-  },
+const updateAuthState = () => {
+  isAuthenticated.value = localStorage.getItem('isAuthenticated') === 'true';
+  userRole.value = localStorage.getItem('role');
 };
+
+watch(route, () => {
+  updateAuthState();
+});
+
+const showUserHeader = computed(() => isAuthenticated.value && userRole.value === 'user' && route.path !== '/login');
+const showAdminHeader = computed(() => isAuthenticated.value && userRole.value === 'admin' && route.path !== '/login');
 </script>
+
+
 
 <style>
 .app-background {

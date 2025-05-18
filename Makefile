@@ -5,15 +5,15 @@ TAG = latest
 
 help:
 	@echo "Local commands"
-	@echo " - serve - start develop server"
-	@echo " - dev - start production"
+	@echo "  serve   start develop server"
+	@echo "  dev     start production"
 	@echo "Docker commmands"
-	@echo " - build - build docker container"
-	@echo " - run - run docker container"
-	@echo " - up - build and run container"
-	@echo " - stop - stop container"
-	@echo " - clean - remove docker image"
-	@echo " - rel - rebuild and restart container"
+	@echo "  build   build docker container"
+	@echo "  run     run docker container"
+	@echo "  up      build and run container"
+	@echo "  stop    stop container"
+	@echo "  clean   remove docker image"
+	@echo "  rel     rebuild and restart container"
 
 serve:
 	npm run serve
