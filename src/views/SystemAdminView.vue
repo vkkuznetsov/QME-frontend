@@ -7,12 +7,12 @@
       <v-row class="mt-6">
         <v-col cols="12" md="4">
           <v-card class="mx-auto" max-width="400">
-            <v-card-title>Пользователи</v-card-title>
+            <v-card-title>Элективы</v-card-title>
             <v-card-text>
-              Управление пользователями системы, их ролями и правами доступа
+              Управление элективами, их статусами и настройками
             </v-card-text>
             <v-card-actions>
-              <v-btn color="primary" to="/system-admin/users">
+              <v-btn color="primary" to="/system-admin/electives">
                 Перейти
               </v-btn>
             </v-card-actions>

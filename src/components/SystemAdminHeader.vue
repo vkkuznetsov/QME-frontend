@@ -9,7 +9,7 @@
     <!-- Навигационные кнопки рядом с логотипом -->
     <div class="nav-buttons">
       <v-btn text :to="{ path: '/system-admin' }">Главная</v-btn>
-      <v-btn text :to="{ path: '/system-admin/users' }">Пользователи</v-btn>
+      <v-btn text :to="{ path: '/system-admin/electives' }">Элективы</v-btn>
       <v-btn text :to="{ path: '/system-admin/settings' }">Настройки системы</v-btn>
       <v-btn text :to="{ path: '/system-admin/logs' }">Логи</v-btn>
     </div>
