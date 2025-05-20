@@ -3,6 +3,7 @@ import {createRouter, createWebHistory} from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import UserMainView from '../views/UserMainView.vue';
 import AdminView from '../views/AdminView.vue';
+import SystemAdminView from '../views/SystemAdminView.vue';
 import AdminRequestsView from '../views/AdminRequestsView.vue';
 import AdminSettingsView from '../views/AdminSettingsView.vue';
 import UserProfileView from '../views/UserProfileView.vue';
@@ -11,6 +12,7 @@ import UserRequestView from '../views/UserRequestView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import UserStatisticView from '../views/UserStatisticView.vue';
 import AdminOptimalView from '../views/AdminOptimalView.vue';
+import SystemAdminSettings from '../views/SystemAdminSettings.vue';
 
 const routes = [
     {
@@ -29,6 +31,18 @@ const routes = [
         name: 'AdminView',
         component: AdminView,
         meta: {requiresAuth: true, role: 'admin'},
+    },
+    {
+        path: '/system-admin',
+        name: 'SystemAdminView',
+        component: SystemAdminView,
+        meta: {requiresAuth: true, role: 'system_admin'},
+    },
+    {
+        path: '/system-admin/settings',
+        name: 'SystemAdminSettings',
+        component: SystemAdminSettings,
+        meta: {requiresAuth: true, role: 'system_admin'}
     },
     {
         path:'/statistics',
@@ -98,6 +112,8 @@ router.beforeEach((to, from, next) => {
     if (to.meta.role && to.meta.role !== userRole) {
         if (userRole === 'admin') {
             return next('/admin');
+        } else if (userRole === 'system_admin') {
+            return next('/system-admin');
         }
         return next('/');
     }

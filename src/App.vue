@@ -8,6 +8,7 @@
         <div class="main-container">
           <user-header v-if="showUserHeader" />
           <admin-header v-else-if="showAdminHeader" />
+          <system-admin-header v-else-if="showSystemAdminHeader" />
           <router-view />
         </div>
       </template>
@@ -22,6 +23,7 @@ import { useRoute } from 'vue-router';
 
 import UserHeader from './components/UserHeader.vue';
 import AdminHeader from './components/AdminHeader.vue';
+import SystemAdminHeader from './components/SystemAdminHeader.vue';
 import RoleSwitcher from './components/RoleSwitcher.vue';
 
 const route = useRoute();
@@ -40,6 +42,7 @@ watch(route, () => {
 
 const showUserHeader = computed(() => isAuthenticated.value && userRole.value === 'user' && route.path !== '/login');
 const showAdminHeader = computed(() => isAuthenticated.value && userRole.value === 'admin' && route.path !== '/login');
+const showSystemAdminHeader = computed(() => isAuthenticated.value && userRole.value === 'system_admin' && route.path !== '/login');
 </script>
 
 

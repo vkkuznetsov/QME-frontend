@@ -43,32 +43,33 @@
   </v-container>
 </template>
 
-<script>
-export default {
-  name: 'LoginView',
-  data() {
-    return {
-      username: '',
-      password: '',
-      error: null,
-    };
-  },
-  methods: {
-    login() {
-      if (this.username === 'admin' && this.password === 'admin') {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('role', 'admin');
-        this.$router.push('/admin');
-      } else if (this.username === 'user' && this.password === 'user') {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('role', 'user');
-        this.$router.push('/profile');
-      } else {
-        this.error = 'Неверные имя пользователя или пароль';
-      }
-    },
-  },
-};
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const username = ref('')
+const password = ref('')
+const error = ref(null)
+
+const router = useRouter()
+
+function login() {
+  if (username.value === 'root' && password.value === 'root') {
+    localStorage.setItem('isAuthenticated', 'true')
+    localStorage.setItem('role', 'system_admin')
+    router.push('/system-admin')
+  } else if (username.value === 'admin' && password.value === 'admin') {
+    localStorage.setItem('isAuthenticated', 'true')
+    localStorage.setItem('role', 'admin')
+    router.push('/admin')
+  } else if (username.value === 'user' && password.value === 'user') {
+    localStorage.setItem('isAuthenticated', 'true')
+    localStorage.setItem('role', 'user')
+    router.push('/profile')
+  } else {
+    error.value = 'Неверные имя пользователя или пароль'
+  }
+}
 </script>
 
 <style scoped>

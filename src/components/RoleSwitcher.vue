@@ -17,7 +17,16 @@
           variant="tonal"
           class="ms-4 role-btn"
         >
-          Режим менеждера
+          Режим менеджера
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn
+          :class="{ 'active-role': currentRole === 'system_admin' }"
+          @click="switchRole('system_admin')"
+          variant="tonal"
+          class="ms-4 role-btn"
+        >
+          Режим системного администратора
         </v-btn>
       </v-btn-group>
     </v-row>
@@ -41,6 +50,8 @@ const switchRole = (role) => {
   
   if (role === 'admin') {
     router.push('/admin');
+  } else if (role === 'system_admin') {
+    router.push('/system-admin');
   } else {
     router.push('/');
   }
