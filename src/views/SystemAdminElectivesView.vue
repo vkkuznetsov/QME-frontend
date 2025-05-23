@@ -31,6 +31,13 @@
           <span>{{ item.free_spots }}</span>
         </template>
 
+        <!-- Новая колонка «Действия» -->
+        <template #item.actions="{ item }">
+          <v-btn icon small @click="openEdit(item)">
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+        </template>
+
         <!-- Кнопка раскрытия -->
         <template #item.data-table-expand="{ internalItem, isExpanded, toggleExpand }">
           <v-btn
@@ -73,24 +80,37 @@
         </template>
       </v-data-table>
     </v-card>
+
+    <!-- Заглушка компонента редактирования -->
+    <EditElective
+      v-if="editVisible"
+      :elective="selectedElective"
+      @close="closeEdit"
+    />
   </v-container>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import axiosInstance from '@/axios/axios'
+// Заглушка компонента (создайте файл EditElective.vue рядом или импортируйте реальный)
+import EditElective from '@/components/ElectiveEditDialog.vue'
 
 const search = ref('')
 const loading = ref(true)
 const electives = ref([])
-const groups = ref({}) // { [electiveId]: Array<{id, name, students}> }
-const loadingGroups = ref({}) // { [electiveId]: boolean }
+const groups = ref({})            // { [electiveId]: Array<{id, name, students}> }
+const loadingGroups = ref({})     // { [electiveId]: boolean }
+
+const selectedElective = ref(null)
+const editVisible = ref(false)
 
 const headers = [
   { title: 'ID', value: 'id', width: '70px' },
   { title: 'Название', value: 'name' },
   { title: 'Кластер', value: 'cluster', width: '120px' },
   { title: 'Свободные места', value: 'free_spots', width: '140px' },
+  { title: 'Действия', value: 'actions', sortable: false, width: '100px' },
 ]
 
 const groupHeaders = [
@@ -129,12 +149,22 @@ async function fetchGroups(electiveId) {
 }
 
 function onToggleExpand(internalItem, isExpanded, toggleExpand) {
-  console.log(internalItem)
-
   if (!isExpanded(internalItem)) {
     fetchGroups(internalItem.value)
   }
   toggleExpand(internalItem)
+}
+
+// Открыть форму редактирования
+function openEdit(item) {
+  selectedElective.value = item
+  editVisible.value = true
+}
+
+// Закрыть форму редактирования
+function closeEdit() {
+  editVisible.value = false
+  selectedElective.value = null
 }
 
 onMounted(fetchElectives)
