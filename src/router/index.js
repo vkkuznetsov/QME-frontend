@@ -14,6 +14,7 @@ import UserStatisticView from '../views/UserStatisticView.vue';
 import AdminOptimalView from '../views/AdminOptimalView.vue';
 import SystemAdminSettings from '../views/SystemAdminSettings.vue';
 import SystemAdminElectivesView from '../views/SystemAdminElectivesView.vue';
+import SystemAdminLogsView from '../views/SystemAdminLogsView.vue';
 
 const routes = [
     {
@@ -49,6 +50,12 @@ const routes = [
         path: '/system-admin/electives',
         name: 'SystemAdminElectivesView',
         component: SystemAdminElectivesView,
+        meta: {requiresAuth: true, role: 'system_admin'}
+    },
+    {
+        path: '/system-admin/logs',
+        name: 'SystemAdminLogsView',
+        component: SystemAdminLogsView,
         meta: {requiresAuth: true, role: 'system_admin'}
     },
     {

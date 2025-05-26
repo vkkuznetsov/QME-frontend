@@ -21,9 +21,9 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import UserHeader from './components/UserHeader.vue';
-import AdminHeader from './components/AdminHeader.vue';
-import SystemAdminHeader from './components/SystemAdminHeader.vue';
+import UserHeader from './components/headers/UserHeader.vue';
+import AdminHeader from './components/headers/AdminHeader.vue';
+import SystemAdminHeader from './components/headers/SystemAdminHeader.vue';
 import RoleSwitcher from './components/RoleSwitcher.vue';
 
 const route = useRoute();

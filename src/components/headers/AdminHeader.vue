@@ -8,9 +8,11 @@
 
     <!-- Навигационные кнопки рядом с логотипом -->
     <div class="nav-buttons">
-      <v-btn text :to="{ path: '/' }">ГЛАВНАЯ</v-btn>
-      <v-btn text :to="{ path: '/statistics' }">СТАТИСТИКА</v-btn>
-      <v-btn text :to="{ path: '/requests' }">ЗАЯВКИ</v-btn>
+      <v-btn text :to="{ path: '/admin' }">ГЛАВНАЯ</v-btn>
+      <v-btn text :to="{ path: '/admin/requests' }">ЗАЯВКИ</v-btn>
+      <v-btn text :to="{ path: '/admin/optimal' }">АВТОРАССПРЕДЕЛЕНИЕ</v-btn>
+      <v-btn text :to="{ path: '/admin/reports' }">ОТЧЁТЫ</v-btn>
+      <v-btn text :to="{ path: '/admin/settings' }">НАСТРОЙКИ</v-btn>
     </div>
 
     <!-- Пробел, отодвигающий аватар вправо -->
@@ -18,50 +20,27 @@
 
     <!-- Аватар профиля справа -->
     <v-toolbar-title>
-      <v-img 
-        src="@/assets/profile-icon.png" 
-        alt="Профиль" 
-        max-height="40" 
-        class="clickable-profile" 
-        @click="$router.push('/profile')"
-      />
+      <v-div class="d-flex align-center">
+        <v-span class="highlight-text" style="font-size: 15px;">Менеджер</v-span>
+        <!-- <v-img src="@/assets/profile-icon.png" alt="Профиль" max-height="40" class="ma-0 pa-0"></v-img> -->
+      </v-div>
     </v-toolbar-title>
   </v-app-bar>
 </template>
 
 <script>
 export default {
-  name: 'UserHeader',
+  name: 'AdminHeader',
 };
 </script>
 
 <style scoped>
-/* Глобальные стили для уменьшения расстояния между буквами */
-* {
-  letter-spacing: -0.5px; /* Уменьшение расстояния между буквами во всём шрифте */
-}
-
-/* Настройка всего header */
-.v-app-bar {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 300;
-  font-size: 16px;
-  letter-spacing: -0.5px;
-}
-
 /* Стиль для навигационных кнопок */
 .nav-buttons .v-btn {
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.3px;
   text-transform: none;
-}
-
-/* Настройка заголовка */
-.v-toolbar-title {
-  font-size: 18px;
-  font-weight: 300;
-  letter-spacing: -0.1px;
 }
 
 /* Отступ слева от аватара */
@@ -73,7 +52,13 @@ export default {
 .v-avatar {
   cursor: pointer;
 }
-.clickable-profile {
-  cursor: pointer;
+
+.highlight-text {
+  background: linear-gradient(90deg, #4a95d2, #106db9) !important;
+  border-radius: 50px;
+  /* Круглый фон */
+  padding: 5px 10px;
+  /* Внутренние отступы */
+  color: white;
 }
 </style>
