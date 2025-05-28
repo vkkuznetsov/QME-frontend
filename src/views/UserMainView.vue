@@ -25,6 +25,19 @@
         </v-col>
 
         <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
+          <v-autocomplete
+              v-model="selectedTeacher"
+              :items="allTeacherItems"
+              label="Преподаватель"
+              outlined
+              dense
+              clearable
+              :search-input.sync="teacherSearch"
+              :filter="customFilter"
+          ></v-autocomplete>
+        </v-col>
+
+        <v-col cols="12" class="d-flex justify-center">
           <v-btn
               color="primary"
               @click="resetFilters"
@@ -67,6 +80,8 @@ import CourseCard from '@/components/CourseCard.vue'
 const courses = ref([])
 const searchQuery = ref('')
 const selectedCluster = ref(null)
+const selectedTeacher = ref(null)
+const teacherSearch = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(16)
 
@@ -84,6 +99,16 @@ const allClusterItems = computed(() => [
   ...new Set(courses.value.map(course => course.cluster).filter(Boolean))
 ])
 
+const allTeacherItems = computed(() => [
+  ...new Set(courses.value.flatMap(course => course.teachers || []).filter(Boolean))
+])
+
+const customFilter = (item, queryText) => {
+  const textOne = item.toLowerCase()
+  const searchText = queryText.toLowerCase()
+  return textOne.indexOf(searchText) > -1
+}
+
 const filteredCourses = computed(() => {
   return courses.value.filter(course => {
     const searchMatch =
@@ -93,7 +118,9 @@ const filteredCourses = computed(() => {
             .includes(searchQuery.value.toLowerCase())
     const clusterMatch =
         !selectedCluster.value || course.cluster === selectedCluster.value
-    return searchMatch && clusterMatch
+    const teacherMatch =
+        !selectedTeacher.value || (course.teachers && course.teachers.includes(selectedTeacher.value))
+    return searchMatch && clusterMatch && teacherMatch
   })
 })
 
@@ -107,7 +134,6 @@ const totalPages = computed(() =>
     Math.ceil(filteredCourses.value.length / itemsPerPage.value)
 )
 
-
 const changePage = (page) => {
   if (page > 0 && page <= totalPages.value) {
     currentPage.value = page
@@ -118,13 +144,13 @@ const changePage = (page) => {
 const resetFilters = () => {
   searchQuery.value = ''
   selectedCluster.value = null
+  selectedTeacher.value = null
+  teacherSearch.value = ''
   currentPage.value = 1
 }
 
-
 onMounted(fetchCourses)
 </script>
-
 
 <style scoped>
 .section-title {
