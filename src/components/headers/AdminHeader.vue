@@ -20,10 +20,10 @@
 
     <!-- Аватар профиля справа -->
     <v-toolbar-title>
-      <v-div class="d-flex align-center">
-        <v-span class="highlight-text" style="font-size: 15px;">Менеджер</v-span>
+      <div class="d-flex align-center">
+        <span class="highlight-text" style="font-size: 15px;">Менеджер</span>
         <!-- <v-img src="@/assets/profile-icon.png" alt="Профиль" max-height="40" class="ma-0 pa-0"></v-img> -->
-      </v-div>
+      </div>
     </v-toolbar-title>
   </v-app-bar>
 </template>

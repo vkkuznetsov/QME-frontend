@@ -1,8 +1,9 @@
 import {createRouter, createWebHistory} from 'vue-router';
 
-import LoginView from '../views/LoginView.vue';
+import LoginView from '../views/LoginView(with email auth).vue';
+import AdminLogin from '../views/AdminLogin.vue';
 import UserMainView from '../views/UserMainView.vue';
-import AdminView from '../views/AdminView.vue';
+import AdminView from '../views/AdminMainView.vue';
 import SystemAdminView from '../views/SystemAdminView.vue';
 import AdminRequestsView from '../views/AdminRequestsView.vue';
 import AdminSettingsView from '../views/AdminSettingsView.vue';
@@ -12,9 +13,10 @@ import UserRequestView from '../views/UserRequestView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import UserStatisticView from '../views/UserStatisticView.vue';
 import AdminOptimalView from '../views/AdminOptimalView.vue';
-import SystemAdminSettings from '../views/SystemAdminSettings.vue';
+import SystemAdminStatus from '../views/SystemAdminStatus.vue';
 import SystemAdminElectivesView from '../views/SystemAdminElectivesView.vue';
 import SystemAdminLogsView from '../views/SystemAdminLogsView.vue';
+import Managers from '../views/ManagersView.vue';
 
 const routes = [
     {
@@ -29,6 +31,11 @@ const routes = [
         component: LoginView,
     },
     {
+        path: '/login-admin',
+        name: 'AdminLogin',
+        component: AdminLogin,
+    },
+    {
         path: '/admin',
         name: 'AdminView',
         component: AdminView,
@@ -41,9 +48,9 @@ const routes = [
         meta: {requiresAuth: true, role: 'system_admin'},
     },
     {
-        path: '/system-admin/settings',
-        name: 'SystemAdminSettings',
-        component: SystemAdminSettings,
+        path: '/system-admin/status',
+        name: 'SystemAdminStatus',
+        component: SystemAdminStatus,
         meta: {requiresAuth: true, role: 'system_admin'}
     },
     {
@@ -57,6 +64,12 @@ const routes = [
         name: 'SystemAdminLogsView',
         component: SystemAdminLogsView,
         meta: {requiresAuth: true, role: 'system_admin'}
+    },
+    {
+        path: '/system-admin/managers',
+        name: 'Managers',
+        component: Managers,
+        meta: {requiresAuth: true, role: 'system_admin'},
     },
     {
         path:'/statistics',

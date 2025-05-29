@@ -18,11 +18,11 @@
 
     <!-- Аватар профиля справа -->
     <v-toolbar-title>
-      <v-div class="d-flex align-center">
-        <v-span class="highlight-text" style="font-size: 15px;">{{ fullName }}</v-span>
+      <div class="d-flex align-center">
+        <span class="highlight-text" style="font-size: 15px;">{{ fullName }}</span>
         <v-img src="@/assets/profile-icon.png" alt="Профиль" max-height="40" class="clickable-profile ml-2"
           @click="$router.push('/profile')" />
-      </v-div>
+      </div>
     </v-toolbar-title>
   </v-app-bar>
 </template>

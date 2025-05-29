@@ -170,6 +170,7 @@ const fetchUserProfile = async (email) => {
 const logout = () => {
   localStorage.removeItem('isAuthenticated');
   localStorage.removeItem('userEmail');
+  localStorage.removeItem('role');
   router.push('/login');
 };
 

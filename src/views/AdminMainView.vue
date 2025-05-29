@@ -1,8 +1,8 @@
 <template>
-  <v-container>
+  <v-container class="py-8">
     <v-row>
       <v-col cols="12" class="d-flex justify-space-between align-center">
-        <h1 class="text-h4 mb-6">Панель управления системного администратора</h1>
+        <h1 class="text-h4 mb-6">Панель управления менеджера</h1>
         <v-btn
           color="error"
           variant="text"
@@ -13,51 +13,21 @@
           Выйти
         </v-btn>
       </v-col>
+    </v-row>
 
+    <v-row>
       <v-col cols="12" sm="6" md="4">
         <v-card
           class="mx-auto"
           max-width="400"
-          @click="$router.push('/system-admin/electives')"
-        >
-          <v-card-title class="d-flex align-center">
-            <v-icon large color="primary" class="mr-3">mdi-book-open-page-variant</v-icon>
-            Элективы
-          </v-card-title>
-          <v-card-text>
-            Управление элективами, их статусами и настройками
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" sm="6" md="4">
-        <v-card
-          class="mx-auto"
-          max-width="400"
-          @click="$router.push('/system-admin/managers')"
-        >
-          <v-card-title class="d-flex align-center">
-            <v-icon large color="primary" class="mr-3">mdi-account-group</v-icon>
-            Менеджеры
-          </v-card-title>
-          <v-card-text>
-            Создание и управление менеджерами системы
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" sm="6" md="4">
-        <v-card
-          class="mx-auto"
-          max-width="400"
-          @click="$router.push('/system-admin/logs')"
+          @click="$router.push('/admin/requests')"
         >
           <v-card-title class="d-flex align-center">
             <v-icon large color="primary" class="mr-3">mdi-file-document</v-icon>
-            Логи
+            Заявки
           </v-card-title>
           <v-card-text>
-            Просмотр системных логов и аудит действий пользователей
+            Просмотр и обработка заявок от пользователей
           </v-card-text>
         </v-card>
       </v-col>
@@ -66,14 +36,46 @@
         <v-card
           class="mx-auto"
           max-width="400"
-          @click="$router.push('/system-admin/status')"
+          @click="$router.push('/admin/optimal')"
         >
           <v-card-title class="d-flex align-center">
-            <v-icon large color="primary" class="mr-3">mdi-server</v-icon>
-            Статус системы
+            <v-icon large color="primary" class="mr-3">mdi-auto-fix</v-icon>
+            Автораспределение
           </v-card-title>
           <v-card-text>
-            Мониторинг состояния и производительности системы
+            Настройка и запуск автоматического распределения
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" sm="6" md="4">
+        <v-card
+          class="mx-auto"
+          max-width="400"
+          @click="$router.push('/admin/reports')"
+        >
+          <v-card-title class="d-flex align-center">
+            <v-icon large color="primary" class="mr-3">mdi-chart-bar</v-icon>
+            Отчеты
+          </v-card-title>
+          <v-card-text>
+            Просмотр статистики и аналитических отчетов
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" sm="6" md="4">
+        <v-card
+          class="mx-auto"
+          max-width="400"
+          @click="$router.push('/admin/settings')"
+        >
+          <v-card-title class="d-flex align-center">
+            <v-icon large color="primary" class="mr-3">mdi-cog</v-icon>
+            Настройки системы
+          </v-card-title>
+          <v-card-text>
+            Настройка параметров и конфигурации системы
           </v-card-text>
         </v-card>
       </v-col>
@@ -127,7 +129,7 @@ onMounted(() => {
   const isAuthenticated = localStorage.getItem('isAuthenticated')
   const role = localStorage.getItem('role')
   
-  if (!isAuthenticated || role !== 'system_admin') {
+  if (!isAuthenticated || role !== 'admin') {
     router.push('/admin/login')
   }
 })

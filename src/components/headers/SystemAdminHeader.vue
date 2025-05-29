@@ -10,8 +10,9 @@
     <div class="nav-buttons">
       <v-btn text :to="{ path: '/system-admin' }">ГЛАВНАЯ</v-btn>
       <v-btn text :to="{ path: '/system-admin/electives' }">ЭЛЕКТИВЫ</v-btn>
-      <v-btn text :to="{ path: '/system-admin/settings' }">НАСТРОЙКИ СИСТЕМЫ</v-btn>
+      <v-btn text :to="{ path: '/system-admin/managers' }">МЕНЕДЖЕРЫ</v-btn>
       <v-btn text :to="{ path: '/system-admin/logs' }">ЛОГИ</v-btn>
+      <v-btn text :to="{ path: '/system-admin/status' }">СТАТУС СИСТЕМЫ</v-btn>
     </div>
 
     <!-- Пробел, отодвигающий аватар вправо -->
@@ -19,10 +20,10 @@
 
     <!-- Аватар профиля и текст справа, в одном ряду -->
     <v-toolbar-title>
-      <v-div class="d-flex align-center">
-        <v-span class="highlight-text" style="font-size: 15px;">Администратор</v-span>
+      <div class="d-flex align-center">
+        <span class="highlight-text" style="font-size: 15px;">Администратор</span>
         <!-- <v-img src="@/assets/profile-icon.png" alt="Профиль" max-height="40" class="ma-0 pa-0"></v-img> -->
-      </v-div>
+      </div>
     </v-toolbar-title>
   </v-app-bar>
 </template>

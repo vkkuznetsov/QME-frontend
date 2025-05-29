@@ -14,6 +14,15 @@
           Обновить
         </v-btn>
         <v-btn
+          color="success"
+          class="mr-2"
+          @click="downloadLogs"
+          :disabled="loading"
+        >
+          <v-icon left>mdi-download</v-icon>
+          Скачать логи
+        </v-btn>
+        <v-btn
           color="error"
           @click="clearLogs"
           :disabled="loading"
@@ -84,6 +93,25 @@ const refreshLogs = async () => {
     logs.value = 'Ошибка при загрузке логов';
   } finally {
     loading.value = false;
+  }
+};
+
+const downloadLogs = async () => {
+  try {
+    const response = await axiosInstance.get('/logs/download', {
+      responseType: 'blob'
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'application.log');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Ошибка при скачивании логов:', error);
   }
 };
 
