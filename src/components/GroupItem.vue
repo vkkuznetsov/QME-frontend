@@ -6,7 +6,10 @@
           <v-icon :color="groupTypeColor" large>{{ groupIcon }}</v-icon>
         </v-avatar>
         <div>
-          <v-chip :color="groupTypeColor" text-color="white" small>{{ group.type }}</v-chip>
+          <div class="d-flex align-center">
+            <v-chip :color="groupTypeColor" text-color="white" small>{{ group.type }}</v-chip>
+            <span class="group-schedule ml-2">{{ group.day }}, {{ group.time_interval }}</span>
+          </div>
           <div class="group-name">{{ group.name }}</div>
         </div>
       </div>
@@ -34,32 +37,27 @@
   </v-card>
 </template>
 
-<script>
+<script setup>
 import { computed } from 'vue';
 import { getGroupTypeColor, getGroupIcon } from '@/utils/colorUtils';
 
-export default {
-  name: 'GroupItem',
-  props: {
-    group: { type: Object, required: true },
-    isExpanded: { type: Boolean, default: false },
-  },
-  emits: ['toggle'],
-  setup(props, { emit }) {
-    const toggle = () => emit('toggle', props.group.id);
+const props = defineProps({
+  group: { type: Object, required: true },
+  isExpanded: { type: Boolean, default: false },
+});
 
-    const groupTypeColor = computed(() => getGroupTypeColor(props.group.type));
-    const groupIcon = computed(() => getGroupIcon(props.group.type));
-    const freeSpots = computed(() => props.group.capacity - props.group.students.length);
-    const spotColor = computed(() => {
-      if (freeSpots.value === 0) return '#F44336'; // Красный
-      if (freeSpots.value <= 5) return '#4CAF50'; // Зеленый
-      return '#FFC107'; // Желтый
-    });
+const emit = defineEmits(['toggle']);
 
-    return { toggle, groupTypeColor, groupIcon, freeSpots, spotColor };
-  },
-};
+const toggle = () => emit('toggle', props.group.id);
+
+const groupTypeColor = computed(() => getGroupTypeColor(props.group.type));
+const groupIcon = computed(() => getGroupIcon(props.group.type));
+const freeSpots = computed(() => props.group.capacity - props.group.students.length);
+const spotColor = computed(() => {
+  if (freeSpots.value === 0) return '#F44336'; // Красный
+  if (freeSpots.value <= 5) return '#4CAF50'; // Зеленый
+  return '#FFC107'; // Желтый
+});
 </script>
 
 <style scoped>
@@ -76,6 +74,11 @@ export default {
   font-weight: 600;
   font-size: 1.1rem;
   margin-bottom: 4px;
+}
+
+.group-schedule {
+  font-size: 0.9rem;
+  color: #666;
 }
 
 .fill-label {

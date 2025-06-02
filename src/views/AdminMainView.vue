@@ -25,6 +25,13 @@
           <v-card-title class="d-flex align-center">
             <v-icon large color="primary" class="mr-3">mdi-file-document</v-icon>
             Заявки
+            <v-chip
+              v-if="activeRequestsCount > 0"
+              color="error"
+              class="ml-2"
+            >
+              {{ activeRequestsCount }}
+            </v-chip>
           </v-card-title>
           <v-card-text>
             Просмотр и обработка заявок от пользователей
@@ -115,22 +122,35 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axiosInstance from '@/axios/axios'
 
 const router = useRouter()
 const showLogoutDialog = ref(false)
+const activeRequestsCount = ref(0)
+
+const fetchActiveRequestsCount = async () => {
+  try {
+    const response = await axiosInstance.get('/transfer/active-count')
+    activeRequestsCount.value = response.data
+  } catch (error) {
+    console.error('Ошибка при получении количества активных заявок:', error)
+  }
+}
 
 const logout = () => {
   localStorage.clear()
   router.push('/login')
 }
 
-onMounted(() => {
+onMounted(async () => {
   // Проверка авторизации
   const isAuthenticated = localStorage.getItem('isAuthenticated')
   const role = localStorage.getItem('role')
   
   if (!isAuthenticated || role !== 'admin') {
     router.push('/admin/login')
+  } else {
+    await fetchActiveRequestsCount()
   }
 })
 </script>

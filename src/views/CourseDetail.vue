@@ -138,197 +138,165 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
 import {computed, ref, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
 import axiosInstance from '@/axios/axios';
 import GroupItem from '@/components/GroupItem.vue';
 import {generateColorFromString, darkenColor} from '@/utils/colorUtils';
 
-export default {
-  name: 'CourseDetail',
-  components: {
-    GroupItem,
-  },
-  setup() {
-    const route = useRoute();
-    const courseId = route.params.id;
+const route = useRoute();
+const courseId = route.params.id;
 
-    // Состояния
-    const course = ref({name: '', cluster: '', description: ''});
-    const groups = ref([]);
-    const loading = ref(false);
-    const error = ref(null);
+// Состояния
+const course = ref({name: '', cluster: '', description: ''});
+const groups = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-    // Состояния для перезаписи
-    const currentUser = ref(null);
-    const sourceCourses = ref([]);
-    const selectedSourceCourse = ref(null);
-    const selectedGroups = ref({});
-    const loadingUser = ref(false);
-    const userError = ref(null);
-    const submitting = ref(false);
-    const submitError = ref(null);
+// Состояния для перезаписи
+const currentUser = ref(null);
+const sourceCourses = ref([]);
+const selectedSourceCourse = ref(null);
+const selectedGroups = ref({});
+const loadingUser = ref(false);
+const userError = ref(null);
+const submitting = ref(false);
+const submitError = ref(null);
 
-    const expandedGroups = ref({});
+const expandedGroups = ref({});
 
-    // Вычисляемые свойства
-    const clusterColor = computed(() =>
-        generateColorFromString(course.value.cluster || '')
-    );
+// Вычисляемые свойства
+const clusterColor = computed(() =>
+    generateColorFromString(course.value.cluster || '')
+);
 
-    const textColor = computed(() =>
-        darkenColor(clusterColor.value, 50)
-    );
+const textColor = computed(() =>
+    darkenColor(clusterColor.value, 50)
+);
 
-    const groupedGroups = computed(() => {
-      const grouped = {};
-      groups.value.forEach(group => {
-        const type = group.type.toLowerCase();
-        if (!grouped[type]) grouped[type] = [];
-        grouped[type].push(group);
-      });
-      return grouped;
-    });
+const groupedGroups = computed(() => {
+  const grouped = {};
+  groups.value.forEach(group => {
+    const type = group.type.toLowerCase();
+    if (!grouped[type]) grouped[type] = [];
+    grouped[type].push(group);
+  });
+  return grouped;
+});
 
-    const canSubmit = computed(() => {
-      return selectedSourceCourse.value &&
-          Object.keys(groupedGroups.value).every(type => selectedGroups.value[type]);
-    });
+const canSubmit = computed(() => {
+  return selectedSourceCourse.value &&
+      Object.keys(groupedGroups.value).every(type => selectedGroups.value[type]);
+});
 
-    // Методы
-    const toggleGroup = (groupId) => {
-      expandedGroups.value[groupId] = !expandedGroups.value[groupId];
-    };
-
-
-    // Запросы данных
-    async function fetchCourse() {
-      try {
-        const response = await axiosInstance.get(`/elective/${courseId}`);
-        course.value = response.data;
-      } catch (err) {
-        console.error(err);
-        course.value = {name: 'Ошибка загрузки', description: ''};
-      }
-    }
-
-    async function fetchGroups() {
-      loading.value = true;
-      try {
-        const response = await axiosInstance.get(`/elective/${courseId}/groups`);
-        groups.value = response.data;
-      } catch (err) {
-        error.value = 'Ошибка загрузки групп';
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    async function fetchCurrentUser() {
-      loadingUser.value = true;
-      try {
-
-        const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
-        const response = await axiosInstance.get(`/student_info`, {params: {email}});
-        currentUser.value = response.data;
-        await fetchSourceCourses();
-      } catch (err) {
-        userError.value = 'Ошибка загрузки данных пользователя';
-      } finally {
-        loadingUser.value = false;
-      }
-    }
-
-    async function fetchSourceCourses() {
-      if (!currentUser.value) return;
-
-      try {
-        // Извлекаем элективы из групп пользователя
-        const userElectives = currentUser.value.groups
-            .map(g => g.elective)
-            .filter(Boolean); // Фильтруем null/undefined
-
-        // Получаем уникальные курсы
-        const uniqueElectives = [];
-        const seenIds = new Set();
-
-        for (const elective of userElectives) {
-          if (!seenIds.has(elective.id)) {
-            seenIds.add(elective.id);
-            uniqueElectives.push({
-              id: elective.id,
-              name: elective.name,
-              cluster: elective.cluster
-            });
-          }
-        }
-
-        sourceCourses.value = uniqueElectives;
-
-      } catch (err) {
-        console.error('Ошибка обработки курсов:', err);
-        sourceCourses.value = [];
-      }
-    }
-
-    async function submitRequest() {
-      submitError.value = null;
-      if (!canSubmit.value) return;
-
-      submitting.value = true;
-      try {
-        // Формируем массив групп, которые пользователь выбрал для «to»
-        const groupIds = Object.values(selectedGroups.value).map(groupId => Number(groupId));
-
-        const requestBody = {
-          student_id: Number(currentUser.value.id),
-          from_elective_id: Number(selectedSourceCourse.value),
-          to_elective_id: Number(courseId),
-          groups_to_ids: groupIds,
-        };
-
-        console.log('Отправка данных:', requestBody);
-
-        await axiosInstance.post(`/transfer`, requestBody);
-        
-      } catch (err) {
-        submitError.value = err.response?.data?.message || 'Ошибка отправки данных';
-      } finally {
-        submitting.value = false;
-      }
-    }
-
-    // Инициализация
-    onMounted(async () => {
-      await fetchCourse();
-      await fetchGroups();
-      await fetchCurrentUser();
-    });
-
-    return {
-      course,
-      groups,
-      loading,
-      error,
-      expandedGroups,
-      toggleGroup,
-      clusterColor,
-      textColor,
-      currentUser,
-      sourceCourses,
-      selectedSourceCourse,
-      selectedGroups,
-      loadingUser,
-      userError,
-      submitting,
-      submitError,
-      groupedGroups,
-      canSubmit,
-      submitRequest
-    };
-  }
+// Методы
+const toggleGroup = (groupId) => {
+  expandedGroups.value[groupId] = !expandedGroups.value[groupId];
 };
+
+// Запросы данных
+async function fetchCourse() {
+  try {
+    const response = await axiosInstance.get(`/elective/${courseId}`);
+    course.value = response.data;
+  } catch (err) {
+    console.error(err);
+    course.value = {name: 'Ошибка загрузки', description: ''};
+  }
+}
+
+async function fetchGroups() {
+  loading.value = true;
+  try {
+    const response = await axiosInstance.get(`/elective/${courseId}/groups`);
+    groups.value = response.data;
+  } catch (err) {
+    error.value = 'Ошибка загрузки групп';
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function fetchCurrentUser() {
+  loadingUser.value = true;
+  try {
+    const email = localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
+    const response = await axiosInstance.get(`/student_info`, {params: {email}});
+    currentUser.value = response.data;
+    await fetchSourceCourses();
+  } catch (err) {
+    userError.value = 'Ошибка загрузки данных пользователя';
+  } finally {
+    loadingUser.value = false;
+  }
+}
+
+async function fetchSourceCourses() {
+  if (!currentUser.value) return;
+
+  try {
+    // Извлекаем элективы из групп пользователя
+    const userElectives = currentUser.value.groups
+        .map(g => g.elective)
+        .filter(Boolean); // Фильтруем null/undefined
+
+    // Получаем уникальные курсы
+    const uniqueElectives = [];
+    const seenIds = new Set();
+
+    for (const elective of userElectives) {
+      if (!seenIds.has(elective.id)) {
+        seenIds.add(elective.id);
+        uniqueElectives.push({
+          id: elective.id,
+          name: elective.name,
+          cluster: elective.cluster
+        });
+      }
+    }
+
+    sourceCourses.value = uniqueElectives;
+
+  } catch (err) {
+    console.error('Ошибка обработки курсов:', err);
+    sourceCourses.value = [];
+  }
+}
+
+async function submitRequest() {
+  submitError.value = null;
+  if (!canSubmit.value) return;
+
+  submitting.value = true;
+  try {
+    // Формируем массив групп, которые пользователь выбрал для «to»
+    const groupIds = Object.values(selectedGroups.value).map(groupId => Number(groupId));
+
+    const requestBody = {
+      student_id: Number(currentUser.value.id),
+      from_elective_id: Number(selectedSourceCourse.value),
+      to_elective_id: Number(courseId),
+      groups_to_ids: groupIds,
+    };
+
+    console.log('Отправка данных:', requestBody);
+
+    await axiosInstance.post(`/transfer`, requestBody);
+    
+  } catch (err) {
+    submitError.value = err.response?.data?.message || 'Ошибка отправки данных';
+  } finally {
+    submitting.value = false;
+  }
+}
+
+// Инициализация
+onMounted(async () => {
+  await fetchCourse();
+  await fetchGroups();
+  await fetchCurrentUser();
+});
 </script>
 
 <style scoped>

@@ -37,11 +37,34 @@
           ></v-autocomplete>
         </v-col>
 
-        <v-col cols="12" class="d-flex justify-center">
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
+          <v-select
+              v-model="selectedDays"
+              :items="sortedDayItems"
+              label="День недели"
+              outlined
+              dense
+              multiple
+              chips
+              clearable
+          ></v-select>
+        </v-col>
+
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
+          <v-checkbox
+              v-model="showOnlyAvailable"
+              label="Элективы со свободными местами"
+              class="mr-4"
+          ></v-checkbox>
+        </v-col>
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
           <v-btn
               color="primary"
+              outlined
               @click="resetFilters"
+              class="mt-2"
           >
+            <v-icon left>mdi-refresh</v-icon>
             Сбросить фильтры
           </v-btn>
         </v-col>
@@ -82,8 +105,20 @@ const searchQuery = ref('')
 const selectedCluster = ref(null)
 const selectedTeacher = ref(null)
 const teacherSearch = ref('')
+const selectedDays = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(16)
+const showOnlyAvailable = ref(false)
+
+const dayOrder = {
+  'Понедельник': 1,
+  'Вторник': 2,
+  'Среда': 3,
+  'Четверг': 4,
+  'Пятница': 5,
+  'Суббота': 6,
+  'Воскресенье': 7
+}
 
 // Функция загрузки курсов
 const fetchCourses = async () => {
@@ -103,6 +138,14 @@ const allTeacherItems = computed(() => [
   ...new Set(courses.value.flatMap(course => course.teachers || []).filter(Boolean))
 ])
 
+const allDayItems = computed(() => [
+  ...new Set(courses.value.flatMap(course => course.days || []).filter(Boolean))
+])
+
+const sortedDayItems = computed(() => {
+  return allDayItems.value.sort((a, b) => dayOrder[a] - dayOrder[b])
+})
+
 const customFilter = (item, queryText) => {
   const textOne = item.toLowerCase()
   const searchText = queryText.toLowerCase()
@@ -120,7 +163,12 @@ const filteredCourses = computed(() => {
         !selectedCluster.value || course.cluster === selectedCluster.value
     const teacherMatch =
         !selectedTeacher.value || (course.teachers && course.teachers.includes(selectedTeacher.value))
-    return searchMatch && clusterMatch && teacherMatch
+    const availableMatch =
+        !showOnlyAvailable.value || course.free_spots > 0
+    const daysMatch =
+        selectedDays.value.length === 0 ||
+        (course.days && course.days.some(day => selectedDays.value.includes(day)))
+    return searchMatch && clusterMatch && teacherMatch && availableMatch && daysMatch
   })
 })
 
@@ -146,6 +194,8 @@ const resetFilters = () => {
   selectedCluster.value = null
   selectedTeacher.value = null
   teacherSearch.value = ''
+  selectedDays.value = []
+  showOnlyAvailable.value = false
   currentPage.value = 1
 }
 
