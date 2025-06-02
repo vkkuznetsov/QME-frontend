@@ -14,7 +14,7 @@
       ></v-img>
 
       <!-- Кнопки по центру -->
-      <div class="d-flex align-center" style="position: absolute; left: calc(50% + 20px); transform: translateX(-50%); gap: 0px; height: 100%;">
+      <div class="d-flex align-center" style="position: absolute; left: calc(50% + 0px); transform: translateX(-50%); gap: 0px; height: 100%;">
         <v-btn text :ripple="false" :to="{ path: '/' }" class="header-button" style="font-weight: 700;">ГЛАВНАЯ</v-btn>
         <v-btn text :ripple="false" :to="{ path: '/statistics' }" class="header-button" style="font-weight: 700;">СТАТИСТИКА</v-btn>
         <v-btn text :ripple="false" :to="{ path: '/requests' }" class="header-button" style="font-weight: 700;">ЗАЯВКИ</v-btn>
@@ -22,7 +22,7 @@
 
       <!-- ФИО и иконка профиля справа -->
       <div class="d-flex align-center">
-        <span class="header-fullname">{{ fullName }}</span>
+        <span class="header-fullname" style="padding-right: 20px;">{{ fullName }}</span>
         <v-avatar class="ml-2" tile size="40">
           <v-img
             :src="require('@/assets/profile-icon.png')"
@@ -100,6 +100,7 @@ onMounted(async () => {
 
 .header-button {
   height: 100% !important;
+  border-radius: 0%;
   min-height: unset !important;
   padding-top: 0;
   padding-bottom: 0;
