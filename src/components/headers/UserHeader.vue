@@ -1,29 +1,40 @@
 <template>
   <v-app-bar color="primary" dark app>
-    <!-- Логотип слева -->
-    <v-toolbar-title>
-      <v-img src="@/assets/logo.png" alt="Логотип" max-height="40"></v-img>
-    </v-toolbar-title>
-    <v-spacer></v-spacer>
+    <div
+      class="d-flex align-center"
+      style="width: 100%; padding: 0 5%; justify-content: space-between; align-items: center;"
+    >
+      <!-- Логотип слева -->
+      <v-img
+        :src="require('@/assets/logo.png')"
+        alt="Логотип"
+        max-height="90"
+        max-width="90"
+        contain
+      ></v-img>
 
-    <!-- Навигационные кнопки рядом с логотипом -->
-    <div class="nav-buttons">
-      <v-btn text :to="{ path: '/' }">ГЛАВНАЯ</v-btn>
-      <v-btn text :to="{ path: '/statistics' }">СТАТИСТИКА</v-btn>
-      <v-btn text :to="{ path: '/requests' }">ЗАЯВКИ</v-btn>
-    </div>
-
-    <!-- Пробел, отодвигающий аватар вправо -->
-    <v-spacer></v-spacer>
-
-    <!-- Аватар профиля справа -->
-    <v-toolbar-title>
-      <div class="d-flex align-center">
-        <span class="highlight-text" style="font-size: 15px;">{{ fullName }}</span>
-        <v-img src="@/assets/profile-icon.png" alt="Профиль" max-height="40" class="clickable-profile ml-2"
-          @click="$router.push('/profile')" />
+      <!-- Кнопки по центру -->
+      <div class="d-flex align-center" style="position: absolute; left: calc(50% + 20px); transform: translateX(-50%); gap: 0px; height: 100%;">
+        <v-btn text :ripple="false" :to="{ path: '/' }" class="header-button" style="font-weight: 700;">ГЛАВНАЯ</v-btn>
+        <v-btn text :ripple="false" :to="{ path: '/statistics' }" class="header-button" style="font-weight: 700;">СТАТИСТИКА</v-btn>
+        <v-btn text :ripple="false" :to="{ path: '/requests' }" class="header-button" style="font-weight: 700;">ЗАЯВКИ</v-btn>
       </div>
-    </v-toolbar-title>
+
+      <!-- ФИО и иконка профиля справа -->
+      <div class="d-flex align-center">
+        <span class="header-fullname">{{ fullName }}</span>
+        <v-avatar class="ml-2" tile size="40">
+          <v-img
+            :src="require('@/assets/profile-icon.png')"
+            alt="Профиль"
+            max-height="40"
+            contain
+            class="clickable-profile"
+            @click="$router.push('/profile')"
+          ></v-img>
+        </v-avatar>
+      </div>
+    </div>
   </v-app-bar>
 </template>
 
@@ -59,14 +70,6 @@ onMounted(async () => {
   letter-spacing: -0.5px;
 }
 
-/* Стиль для навигационных кнопок */
-.nav-buttons .v-btn {
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.3px;
-  text-transform: none;
-}
-
 /* Настройка заголовка */
 .v-toolbar-title {
   font-size: 18px;
@@ -88,10 +91,21 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.highlight-text {
-  background: linear-gradient(90deg, #4a95d2, #106db9) !important;
-  border-radius: 50px;
-  padding: 5px 10px;
+.header-fullname {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
   color: white;
+}
+
+.header-button {
+  height: 100% !important;
+  min-height: unset !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  align-self: stretch !important;
+}
+.header-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>

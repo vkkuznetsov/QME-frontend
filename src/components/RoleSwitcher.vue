@@ -3,6 +3,7 @@
     <v-row justify="center" no-gutters>
       <v-btn-group class="gap-2">
         <v-btn
+          :ripple="false"
           :class="{ 'active-role': currentRole === 'user' }"
           @click="switchRole('user')"
           variant="tonal"
@@ -12,6 +13,7 @@
         </v-btn>
         <v-spacer></v-spacer>
         <v-btn
+          :ripple="false"
           :class="{ 'active-role': currentRole === 'admin' }"
           @click="switchRole('admin')"
           variant="tonal"
@@ -21,6 +23,7 @@
         </v-btn>
         <v-spacer></v-spacer>
         <v-btn
+          :ripple="false"
           :class="{ 'active-role': currentRole === 'system_admin' }"
           @click="switchRole('system_admin')"
           variant="tonal"
@@ -46,7 +49,7 @@ const switchRole = (role) => {
   
   // Устанавливаем данные авторизации
   localStorage.setItem('isAuthenticated', 'true');
-  localStorage.setItem('userEmail', 'stud0000288216@study.utmn.ru');
+  localStorage.setItem('userEmail', 'stud0000310064@study.utmn.ru');
   
   if (role === 'admin') {
     router.push('/admin');
