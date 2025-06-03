@@ -15,9 +15,9 @@
 
       <!-- Кнопки по центру -->
       <div class="d-flex align-center" style="position: absolute; left: calc(50% + 0px); transform: translateX(-50%); gap: 0px; height: 100%;">
-        <v-btn text :ripple="false" :to="{ path: '/' }" class="header-button" style="font-weight: 700;">ГЛАВНАЯ</v-btn>
-        <v-btn text :ripple="false" :to="{ path: '/statistics' }" class="header-button" style="font-weight: 700;">СТАТИСТИКА</v-btn>
-        <v-btn text :ripple="false" :to="{ path: '/requests' }" class="header-button" style="font-weight: 700;">ЗАЯВКИ</v-btn>
+        <v-btn text :ripple="false" :to="{ path: '/' }" class="header-button" style="font-weight: 700; font-size: 16px;">ГЛАВНАЯ</v-btn>
+        <v-btn text :ripple="false" :to="{ path: '/statistics' }" class="header-button" style="font-weight: 700; font-size: 16px;">СТАТИСТИКА</v-btn>
+        <v-btn text :ripple="false" :to="{ path: '/requests' }" class="header-button" style="font-weight: 700; font-size: 16px;">ЗАЯВКИ</v-btn>
       </div>
 
       <!-- ФИО и иконка профиля справа -->
@@ -100,7 +100,7 @@ onMounted(async () => {
 
 .header-button {
   height: 100% !important;
-  border-radius: 0%;
+  border-radius: 0% !important;
   min-height: unset !important;
   padding-top: 0;
   padding-bottom: 0;

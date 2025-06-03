@@ -1,5 +1,5 @@
 <template>
-  <div class="course-card" @click="goToCourse">
+  <div class="course-card" :class="{ 'course-card--dimmed': isFull }" @click="goToCourse">
     <div class="blue-stripe"></div>
     <div class="course-card__content">
       <h3 class="course-title" title="Название электива">{{ course.name }}</h3>
@@ -9,16 +9,16 @@
         {{ additionalText }}
       </div>
 
-      <span
-          class="course-cluster"
-          :style="{ backgroundColor: clusterColor, color: textColor }"
-          title="Область знаний"
-      >
-        {{ course.cluster }}
-      </span>
-
-      <!-- Новый элемент для числа в правом нижнем углу -->
-      <span class="free-spots" title="Свободные места">{{ course.free_spots }}</span>
+      <div class="cluster-wrapper">
+        <span
+            class="course-cluster"
+            :style="{ backgroundColor: clusterColor, color: textColor }"
+            title="Область знаний"
+        >
+          {{ course.cluster }}
+        </span>
+      </div>
+      <div class="free-spots">Мест: {{ course.free_spots }}</div>
     </div>
   </div>
 </template>
@@ -69,6 +69,7 @@ function darkenColor(color, amount = 50) {
 
 const clusterColor = computed(() => generateColorFromString(props.course.cluster));
 const textColor = computed(() => darkenColor(clusterColor.value, 50));
+const isFull = computed(() => props.course.free_spots === 0);
 
 function goToCourse() {
   router.push({ name: 'CourseDetail', params: { id: props.course.id } });
@@ -86,6 +87,8 @@ function goToCourse() {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
 }
 
 .course-card:hover {
@@ -110,20 +113,9 @@ function goToCourse() {
 
 .course-title {
   font-size: 16px;
-  font-weight: 600;
   margin-top: 0;
   margin-bottom: 8px;
   color: #333;
-}
-
-.course-cluster {
-  display: block;
-  width: fit-content;
-  margin-top: 10px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
 }
 
 .additional-info {
@@ -136,15 +128,31 @@ function goToCourse() {
   display: inline-block;
 }
 
-.free-spots {
-  position: absolute;
-  bottom: 10px;
-  right: 16px;
-  font-size: 12px;
-  font-weight: bold;
-  color: #ffffff;
-  background-color: #1f9100;
+.cluster-wrapper {
+  position: relative;
+  padding-bottom: 30px;
+}
+
+.course-cluster {
+  display: inline-block;
   padding: 4px 8px;
   border-radius: 4px;
+  font-size: 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.free-spots {
+  position: static;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.course-card--dimmed {
+  opacity: 0.6;
 }
 </style>

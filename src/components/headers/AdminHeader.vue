@@ -40,7 +40,7 @@ export default {
 <style scoped>
 /* Глобальные стили для уменьшения расстояния между буквами */
 * {
-  letter-spacing: -0.5px;
+  letter-spacing: -0.5px !important;
   /* Уменьшение расстояния между буквами во всём шрифте */
 }
 

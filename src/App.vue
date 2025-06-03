@@ -50,13 +50,16 @@ const showSystemAdminHeader = computed(() => isAuthenticated.value && userRole.v
 <style>
 .app-background {
   background-color: #f8f8f8;
+  /* Subtle slanted zigzag pattern via SVG data URI */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40' viewBox='0 0 60 40'%3E%3Cpath d='M0,40 L20,0 L40,40 L60,0' stroke='%23000000' stroke-opacity='0.03' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat;
   min-height: 100vh;
 }
 
 .main-container {
   width: 90%;
-  margin: 0 auto;
-  margin-top: 30px;
+  margin: 0 auto; 
+  margin-top: 5vh;
   padding-bottom: 60px;
 }
 </style>
