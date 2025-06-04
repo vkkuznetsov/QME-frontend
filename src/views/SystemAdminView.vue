@@ -126,7 +126,7 @@ onMounted(() => {
   // Проверка авторизации
   const isAuthenticated = localStorage.getItem('isAuthenticated')
   const role = localStorage.getItem('role')
-  
+
   if (!isAuthenticated || role !== 'system_admin') {
     router.push('/admin/login')
   }

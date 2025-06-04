@@ -107,122 +107,122 @@
   </v-container>
 </template>
 
-<script>
-/* eslint-disable */
+<script setup>
+import { ref, onMounted } from 'vue';
 import axiosInstance from "@/axios/axios";
 
-export default {
-  name: "AdminSettingsView",
-  data() {
-    return {
-      activeTab: "general",
-      journalData: [],
-      headers: [
-        { title: "ID", key: "id" },
-        { title: "Статус", key: "status" },
-        { title: "Дата создания", key: "created_at" },
-        { title: "Тип", key: "type" },
-        { title: "Сообщение", key: "message" },
-      ],
-      // Файл для student-choices
-      selectedFile: null,
-      isLoadingStudent: false,
-      isSuccessStudent: false,
-      // Файл для courses-info
-      selectedFile2: null,
-      isLoadingCourses: false,
-      isSuccessCourses: false,
-    };
-  },
-  methods: {
-    formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleString("ru-RU", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-    },
-    async fetchJournalData() {
-      try {
-        const response = await axiosInstance.get("/journal");
-        this.journalData = response.data;
-      } catch (error) {
-        console.error("Ошибка при получении данных журнала:", error);
-      }
-    },
-    handleFileUpload(event) {
-      this.selectedFile = event.target.files[0];
-      this.isSuccessStudent = false;
-    },
-    handleFileUpload2(event) {
-      this.selectedFile2 = event.target.files[0];
-      this.isSuccessCourses = false;
-    },
-    async uploadStudentFile() {
-      if (!this.selectedFile) {
-        alert("Пожалуйста, выберите файл для загрузки.");
-        return;
-      }
-      this.isLoadingStudent = true;
-      try {
-        const formData = new FormData();
-        formData.append("file", this.selectedFile);
-        const response = await axiosInstance.post(
-          "/upload/student-choices",
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
-        );
-        if (response.status === 200) {
-          this.isSuccessStudent = true;
-        } else {
-          alert("Ошибка при загрузке файла.");
-        }
-      } catch (error) {
-        console.error("Ошибка при загрузке файла:", error);
-        alert("Произошла ошибка при загрузке файла. Попробуйте еще раз.");
-      } finally {
-        this.isLoadingStudent = false;
-      }
-    },
-    async uploadCoursesFile() {
-      if (!this.selectedFile2) {
-        alert("Пожалуйста, выберите файл для загрузки.");
-        return;
-      }
-      this.isLoadingCourses = true;
-      try {
-        const formData = new FormData();
-        formData.append("file", this.selectedFile2);
-        const response = await axiosInstance.post(
-          "/upload/courses-info",
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
-        );
-        if (response.status === 200) {
-          this.isSuccessCourses = true;
-        } else {
-          alert("Ошибка при загрузке файла.");
-        }
-      } catch (error) {
-        console.error("Ошибка при загрузке файла:", error);
-        alert("Произошла ошибка при загрузке файла. Попробуйте еще раз.");
-      } finally {
-        this.isLoadingCourses = false;
-      }
-    },
-  },
-  mounted() {
-    this.fetchJournalData();
-  },
+const activeTab = ref("general");
+const journalData = ref([]);
+const headers = [
+  { title: "ID", key: "id" },
+  { title: "Статус", key: "status" },
+  { title: "Дата создания", key: "created_at" },
+  { title: "Тип", key: "type" },
+  { title: "Сообщение", key: "message" },
+];
+
+// Файл для student-choices
+const selectedFile = ref(null);
+const isLoadingStudent = ref(false);
+const isSuccessStudent = ref(false);
+
+// Файл для courses-info
+const selectedFile2 = ref(null);
+const isLoadingCourses = ref(false);
+const isSuccessCourses = ref(false);
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString("ru-RU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 };
+
+const fetchJournalData = async () => {
+  try {
+    const response = await axiosInstance.get("/journal");
+    journalData.value = response.data;
+  } catch (error) {
+    console.error("Ошибка при получении данных журнала:", error);
+  }
+};
+
+const handleFileUpload = (event) => {
+  selectedFile.value = event.target.files[0];
+  isSuccessStudent.value = false;
+};
+
+const handleFileUpload2 = (event) => {
+  selectedFile2.value = event.target.files[0];
+  isSuccessCourses.value = false;
+};
+
+const uploadStudentFile = async () => {
+  if (!selectedFile.value) {
+    alert("Пожалуйста, выберите файл для загрузки.");
+    return;
+  }
+  isLoadingStudent.value = true;
+  try {
+    const formData = new FormData();
+    formData.append("file", selectedFile.value);
+    const response = await axiosInstance.post(
+      "/upload/student-choices",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    if (response.status === 200) {
+      isSuccessStudent.value = true;
+    } else {
+      alert("Ошибка при загрузке файла.");
+    }
+  } catch (error) {
+    console.error("Ошибка при загрузке файла:", error);
+    alert("Произошла ошибка при загрузке файла. Попробуйте еще раз.");
+  } finally {
+    isLoadingStudent.value = false;
+  }
+};
+
+const uploadCoursesFile = async () => {
+  if (!selectedFile2.value) {
+    alert("Пожалуйста, выберите файл для загрузки.");
+    return;
+  }
+  isLoadingCourses.value = true;
+  try {
+    const formData = new FormData();
+    formData.append("file", selectedFile2.value);
+    const response = await axiosInstance.post(
+      "/upload/courses-info",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    if (response.status === 200) {
+      isSuccessCourses.value = true;
+    } else {
+      alert("Ошибка при загрузке файла.");
+    }
+  } catch (error) {
+    console.error("Ошибка при загрузке файла:", error);
+    alert("Произошла ошибка при загрузке файла. Попробуйте еще раз.");
+  } finally {
+    isLoadingCourses.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchJournalData();
+});
 </script>
 
 <style scoped></style>
