@@ -14,9 +14,43 @@
 
           <v-divider class="my-4"></v-divider>
 
-          <!-- Описание курса -->
-          <h2 style="font-weight: 600;">Описание курса</h2>
-          <p class="description-text">{{ course.description }}</p>
+          <!-- Переключатель контента -->
+          <v-btn-group class="mb-4">
+            <v-btn
+                :color="activeTab === 'description' ? 'primary' : undefined"
+                @click="activeTab = 'description'"
+            >
+              Описание
+            </v-btn>
+            <v-btn
+                :color="activeTab === 'text' ? 'primary' : undefined"
+                @click="activeTab = 'text'"
+            >
+              Цели и компетенции
+            </v-btn>
+            <v-btn
+                :color="activeTab === 'questions' ? 'primary' : undefined"
+                @click="activeTab = 'questions'"
+            >
+              Вопросы для аттестации
+            </v-btn>
+          </v-btn-group>
+
+          <!-- Контент в зависимости от выбранной вкладки -->
+          <div v-if="activeTab === 'description'">
+            <h2 style="font-weight: 600;">Описание курса</h2>
+            <p class="description-text">{{ course.description }}</p>
+          </div>
+
+          <div v-else-if="activeTab === 'text'">
+            <h2 style="font-weight: 600;">Цели и компетенции</h2>
+            <p class="description-text">{{ course.text }}</p>
+          </div>
+
+          <div v-else-if="activeTab === 'questions'">
+            <h2 style="font-weight: 600;">Вопросы для аттестации</h2>
+            <p class="description-text">{{ course.questions }}</p>
+          </div>
 
           <!-- Кнопка "Назад" -->
           <v-btn
@@ -149,7 +183,14 @@ const route = useRoute();
 const courseId = route.params.id;
 
 // Состояния
-const course = ref({name: '', cluster: '', description: ''});
+const course = ref({
+  name: '',
+  cluster: '',
+  description: '',
+  text: '',
+  questions: ''
+});
+const activeTab = ref('description');
 const groups = ref([]);
 const loading = ref(false);
 const error = ref(null);
@@ -352,13 +393,13 @@ onMounted(async () => {
   .course-detail-container {
     padding: 16px 12px !important;
   }
+}
+.v-btn-group {
+  display: flex;
+  gap: 4px;
+}
 
-  .course-title {
-    font-size: 1.5rem;
-  }
-
-  .section-title {
-    font-size: 1.1rem;
-  }
+.v-btn-group .v-btn {
+  flex: 1;
 }
 </style>
