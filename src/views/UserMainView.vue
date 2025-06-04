@@ -1,5 +1,20 @@
 <template>
   <div>
+    <div v-if="recommendedCourses.length">
+      <h2 class="section-title">Мои рекомендации</h2>
+      <v-row>
+        <v-col
+          v-for="course in recommendedCourses"
+          :key="'rec-' + course.id"
+          cols="16"
+          sm="3"
+          md="3"
+          lg="3"
+        >
+          <CourseCard :course="course" />
+        </v-col>
+      </v-row>
+    </div>
     <h2 class="section-title">Все элективные курсы</h2>
 
     <!-- Filters -->
@@ -119,6 +134,20 @@ import { ref, computed, onMounted } from 'vue'
 import axiosInstance from '@/axios/axios'
 import CourseCard from '@/components/CourseCard.vue'
 
+const recommendedCourses = ref([])
+
+const fetchRecommendedCourses = async () => {
+  try {
+    const email = localStorage.getItem('userEmail')
+    const studentInfo = await axiosInstance.get('/student_info', { params: { email } })
+    const studentId = studentInfo.data.id
+    const recommendationRes = await axiosInstance.get(`/recomendation/recommendation/${studentId}`)
+    recommendedCourses.value = recommendationRes.data.recommendations || []
+  } catch (error) {
+    console.error('Ошибка загрузки рекомендаций:', error)
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Reactive state                                                             */
 /* -------------------------------------------------------------------------- */
@@ -161,7 +190,10 @@ const fetchCourses = async () => {
   }
 }
 
-onMounted(fetchCourses)
+onMounted(() => {
+  fetchCourses()
+  fetchRecommendedCourses()
+})
 
 /* -------------------------------------------------------------------------- */
 /* Derived data                                                               */
@@ -255,6 +287,7 @@ const resetFilters = () => {
 <!-- ----------------------------------------------------------------------- -->
 <style scoped>
 .section-title {
+  margin-top: 5vh;
   margin-bottom: 5vh;
   font-family: 'Montserrat', sans-serif !important;
   font-size: 37px;
