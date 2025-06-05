@@ -67,8 +67,20 @@ function darkenColor(color, amount = 50) {
       .toUpperCase()}`;
 }
 
-const clusterColor = computed(() => generateColorFromString(props.course.cluster));
-const textColor = computed(() => darkenColor(clusterColor.value, 50));
+const clusterColor = computed(() => {
+  // если «Без области знаний» – делаем серый бейдж
+  if (props.course.cluster === 'Без области знаний') {
+    return '#E0E0E0';
+  }
+  return generateColorFromString(props.course.cluster);
+});
+
+const textColor = computed(() => {
+  if (props.course.cluster === 'Без области знаний') {
+    return '#666666';
+  }
+  return darkenColor(clusterColor.value, 50);
+});
 const isFull = computed(() => props.course.free_spots === 0);
 
 function goToCourse() {

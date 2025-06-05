@@ -3,7 +3,7 @@
     <v-row align="start">
       <!-- Основной контент -->
       <v-col cols="12" md="8">
-        <v-card class="pa-6 custom-shadow">
+        <v-card class="custom-shadow" style="padding: 2vh; border-radius: 12px;">
           <h1 class="course-title">{{ course.name }}</h1>
           <span
               class="course-cluster"
@@ -15,22 +15,28 @@
           <v-divider class="my-4"></v-divider>
 
           <!-- Переключатель контента -->
-          <v-btn-group class="mb-4">
+          <v-btn-group>
             <v-btn
+                style="font-weight: 700; letter-spacing: -0.5px;"
                 :color="activeTab === 'description' ? 'primary' : undefined"
                 @click="activeTab = 'description'"
+                :ripple="false"
             >
               Описание
             </v-btn>
             <v-btn
+                style="font-weight: 700; letter-spacing: -0.5px;"
                 :color="activeTab === 'text' ? 'primary' : undefined"
                 @click="activeTab = 'text'"
+                :ripple="false"
             >
               Цели и компетенции
             </v-btn>
             <v-btn
+                style="font-weight: 700; letter-spacing: -0.5px;"
                 :color="activeTab === 'questions' ? 'primary' : undefined"
                 @click="activeTab = 'questions'"
+                :ripple="false"
             >
               Вопросы для аттестации
             </v-btn>
@@ -38,26 +44,27 @@
 
           <!-- Контент в зависимости от выбранной вкладки -->
           <div v-if="activeTab === 'description'">
-            <h2 style="font-weight: 600;">Описание курса</h2>
-            <p class="description-text">{{ course.description }}</p>
+            <!-- <h2 style="font-weight: 700; color: rgb(0, 0, 0, 0.7); margin: 2vh 0vh;">Описание курса</h2> -->
+            <p class="description-text">{{ processedDescription }}</p>
           </div>
 
           <div v-else-if="activeTab === 'text'">
-            <h2 style="font-weight: 600;">Цели и компетенции</h2>
-            <p class="description-text">{{ course.text }}</p>
+            <!-- <h2 style="font-weight: 700; color: rgb(0, 0, 0, 0.7); margin: 2vh 0vh;">Цели и компетенции</h2> -->
+            <p class="description-text">{{ processedText }}</p>
           </div>
 
           <div v-else-if="activeTab === 'questions'">
-            <h2 style="font-weight: 600;">Вопросы для аттестации</h2>
-            <p class="description-text">{{ course.questions }}</p>
+            <!-- <h2 style="font-weight: 700; color: rgb(0, 0, 0, 0.7); margin: 2vh 0vh;">Вопросы для аттестации</h2> -->
+            <p class="description-text">{{ processedQuestions }}</p>
           </div>
 
           <!-- Кнопка "Назад" -->
           <v-btn
               color="primary"
-              variant="outlined"
               class="mt-4"
               @click="$router.back()"
+              :ripple="false"
+              style="font-weight: 700; letter-spacing: -0.5px;"
           >
             <v-icon start>mdi-arrow-left</v-icon>
             Назад
@@ -68,9 +75,9 @@
       <!-- Боковая панель -->
       <v-col cols="12" md="4">
         <!-- Карточка с группами -->
-        <v-card class="pa-4 custom-shadow mb-4">
+        <v-card variant="flat" class="custom-shadow mb-4" style="padding: 2vh; border-radius: 12px;">
           <h2 class="group-title">Группы курса</h2>
-          <v-divider class="my-2"></v-divider>
+          <v-divider class="my-4"></v-divider>
           <v-list class="compact-list">
             <GroupItem
                 v-for="group in groups"
@@ -90,33 +97,41 @@
         </v-card>
 
         <!-- Карточка перезаписи -->
-        <v-card v-if="currentUser" class="pa-4 custom-shadow">
-          <h2 class="section-title mb-4">Перезапись на курс</h2>
-
+        <v-card v-if="currentUser" class="custom-shadow" style="padding: 2vh; border-radius: 12px;">
+          <h2 class="mb-4">Перезапись на курс</h2>
+          <v-divider class="my-4"></v-divider>
           <!-- Выбор исходного курса -->
           <v-select
+          style="  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.5px !important;
+  color: rgba(0, 0, 0, 0.7) !important;"
               v-model="selectedSourceCourse"
               :items="sourceCourses"
               item-title="name"
               item-value="id"
-              label="Курс для замены"
+              placeholder="Выберите исходный курс"
               variant="outlined"
-              color="primary"
               :loading="loadingUser"
               :error-messages="sourceCourseError"
-              class="mb-4"
+              class="my-4"
+              :ripples="false"
               prepend-icon="mdi-book-remove"
           ></v-select>
 
           <!-- Выбор групп по типам -->
-          <div v-for="(typeGroups, type) in groupedGroups" :key="type" class="mb-4">
-            <h3 class="text-subtitle-1 font-weight-medium mb-2">Выберите {{ type }}:</h3>
+          <div v-for="(typeGroups, type) in groupedGroups" :key="type" class="mb-2">
+            <h3 class="mb-2" style="font-weight: 600;">Выберите {{ type }}:</h3>
             <v-radio-group v-model="selectedGroups[type]" color="primary">
               <v-radio
+                  style="font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.5px !important;
+  color: rgba(0, 0, 0, 0.7) !important;"
                   v-for="group in typeGroups"
                   :key="group.id"
                   :value="group.id"
-                  class="mb-2"
+                  class="mb-1"
               >
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -144,12 +159,16 @@
           </v-alert>
 
           <v-btn
+              style="font-family: 'Montserrat', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;"
               color="primary"
               size="large"
               :loading="submitting"
               :disabled="!canSubmit"
               block
               @click="submitRequest"
+              :ripple="false"
           >
             <v-icon start>mdi-send-check</v-icon>
             Подать заявку
@@ -169,6 +188,15 @@
         </div>
       </v-col>
     </v-row>
+    <v-snackbar
+        v-model="snackbar"
+        color="success"
+        timeout="4000"
+        :ripple="false"
+        style="text-align: center; font-weight: 600; font-family: 'Montserrat', sans-serif !important;"
+    >
+      {{ snackbarMessage }}
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -204,17 +232,40 @@ const loadingUser = ref(false);
 const userError = ref(null);
 const submitting = ref(false);
 const submitError = ref(null);
+const snackbar = ref(false);
+const snackbarMessage = ref(null);
 
 const expandedGroups = ref({});
 
 // Вычисляемые свойства
-const clusterColor = computed(() =>
-    generateColorFromString(course.value.cluster || '')
-);
+const clusterColor = computed(() => {
+  if (course.value.cluster === 'Без области знаний') {
+    return '#E0E0E0';
+  }
+  return generateColorFromString(course.value.cluster || '');
+});
 
-const textColor = computed(() =>
-    darkenColor(clusterColor.value, 50)
-);
+const textColor = computed(() => {
+  if (course.value.cluster === 'Без области знаний') {
+    return '#666666';
+  }
+  return darkenColor(clusterColor.value, 50);
+});
+
+// Удаляем лишние пустые строки и добавляем табуляцию в начале каждого абзаца
+function sanitizeText(text) {
+  if (!text) return '';
+  const indent = '\u00A0\u00A0\u00A0\u00A0'; // визуальная табуляция (4&nbsp;)
+  return text
+    .split(/\r?\n/)
+    .filter(line => line.trim() !== '')
+    .map(line => indent + line.trim())
+    .join('\n\n'); // сохраняем один пустой рядок между абзацами
+}
+
+const processedDescription = computed(() => sanitizeText(course.value.description));
+const processedText = computed(() => sanitizeText(course.value.text));
+const processedQuestions = computed(() => sanitizeText(course.value.questions));
 
 const groupedGroups = computed(() => {
   const grouped = {};
@@ -325,6 +376,9 @@ async function submitRequest() {
 
     await axiosInstance.post(`/transfer`, requestBody);
     
+    // Уведомляем пользователя об успешной отправке заявки
+    snackbarMessage.value = 'Заявка успешно отправлена';
+    snackbar.value = true;
   } catch (err) {
     submitError.value = err.response?.data?.message || 'Ошибка отправки данных';
   } finally {
@@ -345,33 +399,46 @@ onMounted(async () => {
   max-width: 1440px;
   margin: 0 auto;
   padding: 32px 24px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  letter-spacing: -0.5px;
 }
 
 .course-title {
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 4px;
+  margin-bottom: 2vh;
 }
 
 .course-cluster {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
   display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2vh;
 }
 
 .description-text {
+  margin-top: 32px;
+  padding-right: 5vh;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: left;
   white-space: pre-line;
   line-height: 1.6;
-  margin-top: 8px;
+  letter-spacing: -0.5px;
 }
 
 .course-description {

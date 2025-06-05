@@ -1,60 +1,106 @@
 <template>
-  <v-card class="group-item-card">
-    <v-card-title class="d-flex justify-space-between align-center">
-      <div class="d-flex align-center">
-        <v-avatar size="40" class="mr-3">
-          <v-icon :color="groupTypeColor" large>{{ groupIcon }}</v-icon>
-        </v-avatar>
-        <div>
-          <div class="d-flex align-center">
-            <v-chip :color="groupTypeColor" text-color="white" small>{{ group.type }}</v-chip>
-            <span class="group-schedule ml-2">{{ group.day }}, {{ group.time_interval }}</span>
-          </div>
-          <div class="group-name">{{ group.name }}</div>
-        </div>
-      </div>
-      <v-btn icon small @click="toggle">
-        <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-      </v-btn>
-    </v-card-title>
+  <v-card
+    variant="flat"
+    class="group-item-card"
+    :class="{ 'group-disabled': freeSpots === 0 }"
+  >
+    <!-- Header -->
+    <v-card-item class="card-header">
+      <template #prepend>
+        <v-icon :color="groupTypeColor" size="28">{{ groupIcon }}</v-icon>
+      </template>
 
-    <v-card-subtitle class="d-flex flex-column">
-      <div class="d-flex mb-2">
-        <v-avatar :color="spotColor" size="20" class="mr-2"></v-avatar>
-        <span>{{ freeSpots }} мест</span>
-        <span class="fill-label ml-auto">Заполненность ({{ group.students.length }} / {{ group.capacity }})</span>
-      </div>
-    </v-card-subtitle>
+      <template #title>
+        <span class="group-name">{{ group.name }}</span>
+      </template>
 
-    <div v-if="isExpanded" class="student-list">
-      <!-- Список текущих студентов -->
-      <div class="section-title mb-2">Текущие студенты ({{ group.students.length }})</div>
-      <div v-for="student in group.students" :key="student.id" class="student-item">
-        <span>{{ student.fio }}</span>
-      </div>
-      <div v-if="!group.students.length" class="student-item">
-        <span>Нет записанных студентов</span>
-      </div>
-
-      <!-- Список выписывающихся студентов -->
-      <div v-if="uniqueTransfersFrom.length" class="transfer-section">
-        <div class="section-title mb-2">Выписывающиеся студенты ({{ uniqueTransfersFrom.length }})</div>
-        <div v-for="transfer in uniqueTransfersFrom" :key="transfer.id" class="transfer-item">
-          <span class="student-name">{{ transfer.student.fio }}</span>
-        </div>
-      </div>
-
-      <!-- Список записывающихся студентов -->
-      <div v-if="group.transfers_to?.length" class="transfer-section">
-        <div class="section-title mb-2">Записывающиеся студенты ({{ group.transfers_to.length }})</div>
-        <div v-for="transfer in sortedTransfersTo" :key="transfer.id" class="transfer-item">
-          <span class="student-name">{{ transfer.student.fio }}</span>
-          <v-chip size="small" color="primary" class="priority-chip">
-            Приоритет: {{ transfer.priority }}
+      <template #subtitle>
+        <div class="subtitle-row">
+          <v-chip 
+            :color="groupTypeColor"
+            text-color="white"
+            size="small"
+            variant="flat"
+            class="rounded-lg mr-2"
+            style="font-weight: 600;"
+          >
+            {{ group.type }}
           </v-chip>
+          <span class="group-schedule">{{ group.day }}, {{ group.time_interval }}</span>
+        </div>
+      </template>
+
+      <template #append>
+        <v-btn
+          icon
+          variant="text"
+          :ripple="false"
+          size="small"
+          @click="toggle"
+        >
+          <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        </v-btn>
+      </template>
+    </v-card-item>
+
+    <!-- Slots info -->
+    <v-card-actions class="slots-row">
+      <div style="font-weight: 500; font-size: 0.85rem; color: #666; font-weight: 600;">
+        Мест: {{ freeSpots }}
+      </div>
+      <span class="fill-label">({{ group.students.length }} / {{ group.capacity }})</span>
+    </v-card-actions>
+
+    <!-- Expanded content -->
+    <v-expand-transition>
+      <div v-if="isExpanded" class="student-list">
+        <!-- Current students -->
+        <div class="section-title mb-2">
+          Текущие студенты ({{ group.students.length }})
+        </div>
+        <div
+          v-for="student in group.students"
+          :key="student.id"
+          class="student-item"
+        >
+          <span>{{ student.fio }}</span>
+        </div>
+        <div v-if="!group.students.length" class="student-item">
+          <span>Нет записанных студентов</span>
+        </div>
+
+        <!-- Students transferring out -->
+        <div v-if="uniqueTransfersFrom.length" class="transfer-section">
+          <div class="section-title mb-2">
+            Выписывающиеся студенты ({{ uniqueTransfersFrom.length }})
+          </div>
+          <div
+            v-for="transfer in uniqueTransfersFrom"
+            :key="transfer.id"
+            class="transfer-item"
+          >
+            <span class="student-name">{{ transfer.student.fio }}</span>
+          </div>
+        </div>
+
+        <!-- Students transferring in -->
+        <div v-if="group.transfers_to?.length" class="transfer-section">
+          <div class="section-title mb-2">
+            Записывающиеся студенты ({{ group.transfers_to.length }})
+          </div>
+          <div
+            v-for="transfer in sortedTransfersTo"
+            :key="transfer.id"
+            class="transfer-item"
+          >
+            <span class="student-name">{{ transfer.student.fio }}</span>
+            <v-chip size="small" color="primary" class="priority-chip">
+              Приоритет: {{ transfer.priority }}
+            </v-chip>
+          </div>
         </div>
       </div>
-    </div>
+    </v-expand-transition>
   </v-card>
 </template>
 
@@ -101,43 +147,61 @@ const sortedTransfersTo = computed(() => {
 <style scoped>
 .group-item-card {
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
+  border-radius: 0px;
+  padding: 0; /* internal elements handle spacing */
   background-color: #ffffff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.group-disabled {
+  opacity: 0.6;
+}
+
+.card-header {
+  padding: 12px 16px;
 }
 
 .group-name {
   font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 4px;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.subtitle-row {
+  display: flex;
+  align-items: center;
 }
 
 .group-schedule {
-  font-size: 0.9rem;
-  color: #666;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.slots-row {
+  padding: 4px 16px 12px;
 }
 
 .fill-label {
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #666;
 }
 
 .student-list {
-  padding-top: 8px;
+  padding: 0 16px 12px;
 }
 
 .section-title {
   font-weight: 600;
-  color: #666;
   font-size: 0.9rem;
+  color: #555;
   margin-top: 16px;
 }
 
-.student-item {
+.student-item,
+.transfer-item {
   padding: 4px 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .transfer-section {
@@ -146,31 +210,7 @@ const sortedTransfersTo = computed(() => {
   border-top: 1px solid #e0e0e0;
 }
 
-.transfer-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  font-size: 0.9rem;
-}
-
-.student-name {
-  flex-grow: 1;
-  margin-right: 8px;
-}
-
 .priority-chip {
-  font-size: 0.8rem;
-}
-
-.v-card-title,
-.v-card-subtitle {
-  padding: 0;
-  margin-bottom: 8px;
-}
-
-.v-chip {
-  margin-top: 4px;
-  border-radius: 10px;
+  font-size: 0.75rem;
 }
 </style>
