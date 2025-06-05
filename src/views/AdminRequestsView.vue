@@ -130,7 +130,9 @@ const approveTransfer = async (id) => {
   if (transfer) {
     transfer.loading = true;
     try {
-      await axiosInstance.post(`/transfer/approve/${id}`);
+      await axiosInstance.post(`/transfer/approve/${id}`, {
+        manager_id: localStorage.getItem('manager_id')
+      });
       await fetchTransfers();
     } catch (error) {
       console.error('Ошибка при подтверждении заявки:', error);
@@ -144,7 +146,9 @@ const rejectTransfer = async (id) => {
   if (transfer) {
     transfer.loading = true;
     try {
-      await axiosInstance.post(`/transfer/reject/${id}`);
+      await axiosInstance.post(`/transfer/reject/${id}`, {
+        manager_id: localStorage.getItem('manager_id')
+      });
       await fetchTransfers();
     } catch (error) {
       console.error('Ошибка при отклонении заявки:', error);

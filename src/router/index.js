@@ -17,6 +17,8 @@ import SystemAdminStatus from '../views/SystemAdminStatus.vue';
 import SystemAdminElectivesView from '../views/SystemAdminElectivesView.vue';
 import SystemAdminLogsView from '../views/SystemAdminLogsView.vue';
 import Managers from '../views/ManagersView.vue';
+import AdminReportsView from '../views/AdminReportsView.vue';
+
 
 const routes = [
     {
@@ -93,6 +95,12 @@ const routes = [
         name: 'AdminRequestsView',
         component: AdminRequestsView,
         meta: {requiresAuth: true, role: 'admin'},
+    },
+    {
+        path: '/admin/reports',
+        name: 'AdminReportsView',
+        component: AdminReportsView,
+        meta: {requiresAuth: true, role: 'admin'}
     },
     {
         path: '/profile',
