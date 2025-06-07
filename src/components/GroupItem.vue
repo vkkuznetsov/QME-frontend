@@ -22,12 +22,12 @@
             size="small"
             variant="flat"
             class="rounded-lg mr-2"
-            style="font-weight: 600;"
+            style="font-weight: 600; white-space: normal;"
           >
             {{ group.type }}
           </v-chip>
-          <span class="group-schedule">{{ group.day }}, {{ group.time_interval }}</span>
         </div>
+        <span class="group-schedule">{{ group.day }}  {{ group.time_interval }}</span>
       </template>
 
       <template #append>
@@ -168,13 +168,16 @@ const sortedTransfersTo = computed(() => {
 
 .subtitle-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  margin-bottom: 4px;
 }
 
 .group-schedule {
   font-weight: 600;
   font-size: 0.85rem;
   color: #555;
+  margin-top: 4px;
 }
 
 .slots-row {

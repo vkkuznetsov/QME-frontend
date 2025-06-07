@@ -1,6 +1,6 @@
 <template>
   <div v-if="!loadingUser">
-    <h2 class="section-title">Студенты вашего направления "{{ user.sp_code }}" чаще всего выбирают:</h2>
+    <h2 class="section-title">Студенты вашего направления {{ user.sp_code }} чаще всего выбирают:</h2>
 
     <div v-if="loadingRecommendations" class="text-center my-4">
       <v-progress-circular indeterminate color="primary"/>
@@ -120,7 +120,7 @@ onMounted(async () => {
   font-size: 37px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  text-align: justify;
+  text-align: left;
   color: rgba(0, 0, 0, 0.6);
 }
 
