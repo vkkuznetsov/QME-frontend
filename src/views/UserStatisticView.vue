@@ -1,6 +1,6 @@
 <template>
-  <div v-if="!loadingUser" class="mb-8">
-    <h2 class="section-title mb-4">Студенты вашего направления "{{ user.sp_code }}" чаще всего выбирают:</h2>
+  <div v-if="!loadingUser">
+    <h2 class="section-title">Студенты вашего направления "{{ user.sp_code }}" чаще всего выбирают:</h2>
 
     <div v-if="loadingRecommendations" class="text-center my-4">
       <v-progress-circular indeterminate color="primary"/>
@@ -13,39 +13,37 @@
           cols="12"
           class="cluster-item"
       >
-        <v-card class="pa-4" flat style="box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
-          <div class="d-flex align-center mb-4">
+        <v-card class="cluster-card" flat style="box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+          <div
+            class="cluster-header d-flex align-center justify-space-between"
+            :style="{ backgroundColor: generateColorFromString(cluster.name) }"
+          >
             <h3
-                class="cluster-title"
-                :style="{ color: generateClusterColor(cluster.name) }"
+              class="cluster-title"
+              :style="{ color: darkenColor(generateColorFromString(cluster.name), 50) }"
             >
               {{ cluster.name }}
-              <span class="cluster-percent text-medium-emphasis">
-                  (выбрали {{ cluster.percent }}% студентов)
-                </span>
             </h3>
+            <span class="cluster-percent text-medium-emphasis">
+              выбрали {{ cluster.totalStudents }} студентов
+            </span>
           </div>
-
-          <v-row class="courses-list">
-            <v-col
-                v-for="course in cluster.topCourses"
-                :key="course.id"
-                cols="12"
-                sm="6"
-                md="4"
-            >
-              <CourseCard
-                  :course="{
-                      id: course.id,
-                      name: course.name,
-                      cluster: cluster.name,
-                      description: course.description
-                    }"
-                  :additional-text="`${course.student_count} студентов`"
-                  variant="outlined"
-              />
-            </v-col>
-          </v-row>
+          <div class="pa-4">
+            <v-row class="courses-list">
+              <v-col
+                  v-for="course in cluster.topCourses"
+                  :key="course.id"
+                  cols="12"
+                  sm="6"
+                  md="4"
+              >
+                <CourseCard
+                    :course="course"
+                    :additional-text="`${course.student_count} студентов`"
+                />
+              </v-col>
+            </v-row>
+          </div>
         </v-card>
       </v-col>
     </v-row>
@@ -65,7 +63,7 @@
 import {ref, onMounted} from 'vue';
 import axiosInstance from '@/axios/axios';
 import CourseCard from '@/components/CourseCard.vue';
-import {darkenColor, generateColorFromString} from '@/utils/colorUtils';
+import {generateColorFromString, darkenColor} from '@/utils/colorUtils';
 
 const user = ref({});
 const recommendations = ref([]);
@@ -96,9 +94,6 @@ const fetchRecommendations = async (direction) => {
   }
 };
 
-const generateClusterColor = (clusterName) =>
-    darkenColor(generateColorFromString(clusterName || ''), 30);
-
 onMounted(async () => {
   await fetchUserProfile();
   if (user.value?.sp_code) {
@@ -110,32 +105,41 @@ onMounted(async () => {
 
 <style scoped>
 .cluster-list {
-  margin-top: 20px;
+  margin-bottom: 3vh;
 }
 
 .cluster-item {
-  margin-bottom: 20px;
-}
-
-.cluster-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: 0.15px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.cluster-percent {
-  font-size: 0.9rem;
-  font-weight: 400;
+  font-size: 1.3rem;
+  letter-spacing: -0.5px;
 }
 
 .section-title {
-  text-align: center;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  font-size: 20px;
+  margin-top: 5vh;
+  margin-bottom: 5vh;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 37px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-align: justify;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.cluster-item,
+.cluster-percent {
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.5px !important;
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.cluster-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.cluster-header {
+  border-radius: 8px 8px 0 0;
+  padding: 12px 16px;
 }
 
 @media (max-width: 600px) {

@@ -3,13 +3,13 @@
     <div class="blue-stripe"></div>
     <div class="course-card__content">
       <h3 class="course-title" title="Название электива">{{ course.name }}</h3>
-
+      <v-divider class="border-opacity-25 mt-2"></v-divider>
       <!-- Блок дополнительной информации -->
-      <div v-if="additionalText" class="additional-info">
+      <div v-if="additionalText" class="additional-info mt-4">
         {{ additionalText }}
       </div>
 
-      <div class="cluster-wrapper">
+      <div :class="['cluster-wrapper', { 'mt-4': !additionalText }]">
         <span
             class="course-cluster"
             :style="{ backgroundColor: clusterColor, color: textColor }"
@@ -27,6 +27,7 @@
 /* eslint-disable */
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import {generateColorFromString, darkenColor} from '@/utils/colorUtils';
 
 const props = defineProps({
   course: {
@@ -40,32 +41,6 @@ const props = defineProps({
 });
 
 const router = useRouter();
-
-function generateColorFromString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = hash % 360;
-  return `hsl(${hue}, 60%, 90%)`;
-}
-
-function darkenColor(color, amount = 50) {
-  const tempElem = document.createElement('div');
-  tempElem.style.color = color;
-  document.body.appendChild(tempElem);
-  const rgb = getComputedStyle(tempElem).color;
-  document.body.removeChild(tempElem);
-  const rgbValues = rgb.match(/\d+/g).map(Number);
-  let [r, g, b] = rgbValues;
-  r = Math.max(0, r - Math.round(255 * (amount / 100)));
-  g = Math.max(0, g - Math.round(255 * (amount / 100)));
-  b = Math.max(0, b - Math.round(255 * (amount / 100)));
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b)
-      .toString(16)
-      .slice(1)
-      .toUpperCase()}`;
-}
 
 const clusterColor = computed(() => {
   // если «Без области знаний» – делаем серый бейдж
@@ -112,14 +87,17 @@ function goToCourse() {
   position: absolute;
   top: 0;
   left: 0;
-  height: 5px;
-  width: 100%;
+  height: 100%;
+  width: 5px;
   background-color: rgb(var(--v-theme-primary));
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  opacity: 0;
 }
 
 .course-card__content {
   padding: 16px;
-  margin-top: 10px;
+  margin-top: 5px;
   position: relative; /* Добавлено для позиционирования free_spots */
 }
 
@@ -142,7 +120,7 @@ function goToCourse() {
 
 .cluster-wrapper {
   position: relative;
-  padding-bottom: 30px;
+  padding-bottom: 15px;
 }
 
 .course-cluster {
@@ -160,8 +138,8 @@ function goToCourse() {
 .free-spots {
   position: static;
   font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+  font-weight: 700;
+  color: rgba(0, 108, 0, 0.7)
 }
 
 .course-card--dimmed {
