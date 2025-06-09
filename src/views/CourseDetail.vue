@@ -97,7 +97,7 @@
         </v-card>
 
         <!-- Карточка перезаписи -->
-        <v-card v-if="currentUser" class="custom-shadow" style="padding: 2vh; border-radius: 12px;">
+        <v-card v-if="currentUser && canTransfer" class="custom-shadow" style="padding: 2vh; border-radius: 12px;">
           <h2 class="mb-4">Перезапись на курс</h2>
           <v-divider class="my-4"></v-divider>
           <!-- Выбор исходного курса -->
@@ -175,6 +175,13 @@
           </v-btn>
         </v-card>
 
+        <!-- Сообщение о невозможности перезаписи -->
+        <v-card v-else-if="currentUser && !canTransfer" class="custom-shadow" style="padding: 2vh; border-radius: 12px;">
+          <v-alert type="warning" density="compact" class="mb-0">
+            {{ transferError }}
+          </v-alert>
+        </v-card>
+
         <!-- Сообщение о авторизации -->
         <div v-else class="text-center my-4">
           <v-progress-circular
@@ -234,6 +241,8 @@ const submitting = ref(false);
 const submitError = ref(null);
 const snackbar = ref(false);
 const snackbarMessage = ref(null);
+const canTransfer = ref(true);
+const transferError = ref(null);
 
 const expandedGroups = ref({});
 
@@ -310,6 +319,22 @@ async function fetchGroups() {
   }
 }
 
+async function checkCanTransfer() {
+  if (!currentUser.value) return;
+  
+  try {
+    const response = await axiosInstance.get(`/students/${currentUser.value.id}/electives/${courseId}/can-transfer`);
+    canTransfer.value = response.data.can_transfer;
+    if (!canTransfer.value) {
+      transferError.value = response.data.message;
+    }
+  } catch (err) {
+    console.error('Ошибка проверки возможности перезаписи:', err);
+    canTransfer.value = false;
+    transferError.value = 'Ошибка проверки возможности перезаписи';
+  }
+}
+
 async function fetchCurrentUser() {
   loadingUser.value = true;
   try {
@@ -317,6 +342,7 @@ async function fetchCurrentUser() {
     const response = await axiosInstance.get(`/student_info`, {params: {email}});
     currentUser.value = response.data;
     await fetchSourceCourses();
+    await checkCanTransfer();
   } catch (err) {
     userError.value = 'Ошибка загрузки данных пользователя';
   } finally {
