@@ -19,6 +19,7 @@
         </span>
       </div>
       <div class="free-spots">Мест: {{ course.free_spots }}</div>
+      <div class="transfer-count">Желающих: {{ course.transfer_count }}</div>
     </div>
   </div>
 </template>
@@ -140,6 +141,14 @@ function goToCourse() {
   font-size: 12px;
   font-weight: 700;
   color: rgba(0, 108, 0, 0.7)
+}
+
+.transfer-count {
+  position: static;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(108, 0, 0, 0.7);
+  margin-top: 4px;
 }
 
 .course-card--dimmed {
