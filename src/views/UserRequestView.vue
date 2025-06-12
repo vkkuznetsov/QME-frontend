@@ -3,73 +3,59 @@
     <v-row>
       <v-col cols="12">
         <v-card class="pa-4 mb-4 custom-shadow main-request-card">
-          <div class="header-section justify-space-between" style="text-align: center;">
+          <div class="header-section">
             <h2 class="requests-title">Мои заявки на перезапись</h2>
           </div>
+
           <!-- Индикатор загрузки / Ошибка -->
           <div v-if="loadingRequests" class="text-center my-4">
-            <v-progress-circular indeterminate color="primary"/>
+            <v-progress-circular indeterminate color="primary" />
           </div>
           <div v-else-if="requestsError" class="text-center my-4">
             <v-alert type="error" dismissible>{{ requestsError }}</v-alert>
           </div>
+
           <div v-else>
-            <!-- Если нет заявок вообще -->
             <div v-if="userRequests.length === 0" class="no-requests-text">
-              <p class="text-center">У вас нет заявок на перезапись</p>
+              <p>У вас нет заявок на перезапись</p>
             </div>
-            <!-- Иначе отображаем секции по sourceElectiveId -->
+
             <div v-else>
-              <div
-                  v-for="(group, sourceElectiveId) in groupsData"
-                  :key="sourceElectiveId"
-                  class="source-section mb-8"
-              >
-                <!-- Заголовок для каждой группы -->
-                <div class="group-header d-flex align-center mb-3">
-                  <v-icon color="primary" class="mr-2" size="24"
-                  >mdi-book-outline
-                  </v-icon
-                  >
+              <div v-for="(group, sourceId) in groupsData" :key="sourceId" class="source-section mb-8"
+                :class="{ 'locked-group': lockedGroups[sourceId] }">
+                <!-- Заголовок группы с фоном -->
+                <div class="group-header d-flex align-center mb-3" :style="{ backgroundColor: '#f5f5f5' }">
+                  <v-icon color="primary" class="mr-2" size="24">
+                    mdi-book-outline
+                  </v-icon>
                   <h3 class="source-title">{{ group.name }}</h3>
                 </div>
-                <!-- Подсказка для перетаскивания -->
+
                 <div class="drag-hint text-caption grey--text text-center mb-3">
                   Меняйте приоритет перетаскивая заявки
                 </div>
-                <!-- Сетка заявок -->
+
                 <v-row class="dnd-list interactive-area" dense>
-                  <v-col
-                      v-for="(req, index) in group.requests"
-                      :key="req.id"
-                      cols="12"
-                      md="4"
-                      lg="3"
-                      class="d-flex"
-                  >
-                    <!-- DnD оболочка -->
-                    <div
-                        class="request-card-wrapper flex-grow-1"
-                        :class="{
-                        'drop-target': index === dragOverIndex[sourceElectiveId],
-                        'rejected': req.status === 'Отклонено',
-                      }"
-                        :draggable="isDraggable(req)"
-                        @dragstart="onDragStart($event, sourceElectiveId, index)"
-                        @dragover.prevent="onDragOver($event, sourceElectiveId, index)"
-                        @dragenter.prevent="onDragEnter($event, sourceElectiveId, index)"
-                        @dragleave="onDragLeave($event, sourceElectiveId, index)"
-                        @drop="onDrop($event, sourceElectiveId, index)"
-                        @dragend="onDragEnd($event, sourceElectiveId)"
-                    >
-                      <!-- Используем компонент RequestCard -->
-                      <RequestCard
-                          :req="req"
-                          @request-canceled="onRequestCanceled"
-                      />
+                  <v-col v-for="(req, idx) in group.requests" :key="req.id" cols="16" md="4" lg="3" class="d-flex">
+                    <div class="request-card-wrapper flex-grow-1" :class="{
+                      'drop-target': idx === dragOverIndex[sourceId],
+                      'rejected': req.status === 'rejected',
+                    }" :draggable="isDraggable(req, sourceId)" @dragstart="onDragStart($event, sourceId, idx)"
+                      @dragover.prevent="onDragOver($event, sourceId, idx)"
+                      @dragenter.prevent="onDragEnter($event, sourceId, idx)"
+                      @dragleave="onDragLeave($event, sourceId, idx)" @drop="onDrop($event, sourceId, idx)"
+                      @dragend="onDragEnd($event, sourceId)">
+                      <RequestCard :req="req" @request-canceled="onRequestCanceled" />
                     </div>
                   </v-col>
                 </v-row>
+
+                <div class="text-center mt-4">
+                  <v-btn outlined rounded :color="lockedGroups[sourceId] ? 'grey darken-1' : 'primary'"
+                    @click="toggleLock(sourceId)">
+                    {{ lockedGroups[sourceId] ? 'Разблокировать приоритет' : 'Подтвердить приоритет' }}
+                  </v-btn>
+                </div>
               </div>
             </div>
           </div>
@@ -84,40 +70,33 @@ import { ref, reactive, onMounted } from 'vue';
 import axiosInstance from '@/axios/axios';
 import RequestCard from '@/components/RequestCard.vue';
 
-// Локальные состояния
 const userId = ref(null);
 const userRequests = ref([]);
 const loadingRequests = ref(false);
 const requestsError = ref(null);
-
-// Группированные заявки
 const groupsData = reactive({});
-
-// DnD: храним индексы
 const draggedIndex = reactive({});
 const dragOverIndex = reactive({});
+const lockedGroups = reactive({});
 
 async function loadCurrentUser() {
   try {
     const userEmail =
-        localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
-    const resp = await axiosInstance.get(`/student_info`, {
-      params: { email: userEmail },
-    });
+      localStorage.getItem('userEmail') || 'stud0000295515@study.utmn.ru';
+    const resp = await axiosInstance.get('/student_info', { params: { email: userEmail } });
     userId.value = resp.data.id;
   } catch (err) {
-    console.error('Ошибка при загрузке пользователя', err);
+    console.error(err);
   }
 }
 
-// Загрузка заявок для этого пользователя
 async function fetchRequests() {
   if (!userId.value) return;
   loadingRequests.value = true;
   requestsError.value = null;
   try {
-    const resp = await axiosInstance.get(`/transfer`, {
-      params: { student_id: userId.value },
+    const resp = await axiosInstance.get('/transfer', {
+      params: { student_id: userId.value }
     });
     userRequests.value = resp.data;
     buildGroups();
@@ -132,134 +111,99 @@ async function fetchRequests() {
 onMounted(async () => {
   await loadCurrentUser();
   if (userId.value) {
-    fetchRequests();
+    await fetchRequests();
   }
 });
 
-// Формируем объект groupsData
 function buildGroups() {
-  // Очищаем прежние данные
-  for (const k in groupsData) {
-    delete groupsData[k];
-  }
-  // Раскладываем userRequests по sourceElectiveId
-  userRequests.value.forEach((req) => {
+  for (const k in groupsData) delete groupsData[k];
+  userRequests.value.forEach(req => {
     const id = req.sourceElectiveId;
-    if (!id) return;
     if (!groupsData[id]) {
       groupsData[id] = {
-        name: req.sourceElectiveName || 'Неизвестный электив',
-        requests: [],
+        name: req.sourceElectiveName,
+        requests: []
       };
     }
     groupsData[id].requests.push(req);
   });
-
-  // Сортируем
-  for (const sourceId in groupsData) {
-    const group = groupsData[sourceId];
-    const arr = group.requests;
-    // Если есть «Одобрено», оставляем только его
-    const approved = arr.find((r) => r.status === 'Одобрено');
+  for (const id in groupsData) {
+    const arr = groupsData[id].requests;
+    const approved = arr.find(r => r.status === 'approved');
     if (approved) {
-      group.requests = [approved];
+      groupsData[id].requests = [approved];
     } else {
-      // Иначе, «Отклонено» в конце, остальные по приоритету
       arr.sort((a, b) => {
-        if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
-        if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
+        if (a.status === 'rejected' && b.status !== 'rejected') return 1;
+        if (b.status === 'rejected' && a.status !== 'rejected') return -1;
         return (a.priority || 0) - (b.priority || 0);
       });
     }
   }
+  for (const id in groupsData) {
+    const statuses = groupsData[id].requests.map(r => r.status);
+    lockedGroups[id] = !statuses.includes('draft');
+  }
 }
 
-// DnD Logic
-function isDraggable(req) {
-  return req.status === 'Ожидается';
+function isDraggable(req, sourceId) {
+  return req.status === 'draft' && !lockedGroups[sourceId];
 }
-
-function onDragStart(e, sourceElectiveId, index) {
-  draggedIndex[sourceElectiveId] = index;
+function onDragStart(e, sourceId, idx) {
+  draggedIndex[sourceId] = idx;
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', '');
 }
-
-function onDragEnter(e, sourceElectiveId, index) {
-  dragOverIndex[sourceElectiveId] = index;
-}
-
-function onDragLeave(e, sourceElectiveId, index) {
-  if (dragOverIndex[sourceElectiveId] === index) {
-    dragOverIndex[sourceElectiveId] = null;
-  }
-}
-
-function onDragOver(e, sourceElectiveId, index) {
+function onDragOver(e, sourceId, idx) {
   e.preventDefault();
-  dragOverIndex[sourceElectiveId] = index;
+  dragOverIndex[sourceId] = idx;
 }
-
-// SWAP
-function onDrop(e, sourceElectiveId, dropIndex) {
-  const fromIndex = draggedIndex[sourceElectiveId];
-  if (fromIndex == null || dropIndex == null) return;
-  const group = groupsData[sourceElectiveId];
-  if (!group) return;
-
-  const arr = group.requests;
-  // Не даём SWAP с «Отклонено»
-  if (
-      arr[fromIndex].status === 'Отклонено' ||
-      arr[dropIndex].status === 'Отклонено'
-  ) {
-    return;
-  }
-  // Меняем местами
-  if (fromIndex !== dropIndex) {
-    const tmp = arr[fromIndex];
-    arr[fromIndex] = arr[dropIndex];
-    arr[dropIndex] = tmp;
-    // Пересчитываем приоритет
-    updatePriorities(sourceElectiveId);
-    // Снова сортируем отклонённые в конец
+function onDragEnter(e, sourceId, idx) {
+  dragOverIndex[sourceId] = idx;
+}
+function onDragLeave(e, sourceId, idx) {
+  if (dragOverIndex[sourceId] === idx) dragOverIndex[sourceId] = null;
+}
+function onDrop(e, sourceId, dropIdx) {
+  const fromIdx = draggedIndex[sourceId];
+  if (fromIdx == null || dropIdx == null) return;
+  const arr = groupsData[sourceId].requests;
+  if (arr[fromIdx].status === 'rejected' || arr[dropIdx].status === 'rejected') return;
+  if (fromIdx !== dropIdx) {
+    [arr[fromIdx], arr[dropIdx]] = [arr[dropIdx], arr[fromIdx]];
+    updatePriorities(sourceId);
     arr.sort((a, b) => {
-      if (a.status === 'Отклонено' && b.status !== 'Отклонено') return 1;
-      if (b.status === 'Отклонено' && a.status !== 'Отклонено') return -1;
+      if (a.status === 'rejected' && b.status !== 'rejected') return 1;
+      if (b.status === 'rejected' && a.status !== 'rejected') return -1;
       return (a.priority || 0) - (b.priority || 0);
     });
   }
-  draggedIndex[sourceElectiveId] = null;
-  dragOverIndex[sourceElectiveId] = null;
+  draggedIndex[sourceId] = dragOverIndex[sourceId] = null;
+}
+function onDragEnd(_, sourceId) {
+  draggedIndex[sourceId] = dragOverIndex[sourceId] = null;
 }
 
-function onDragEnd(e, sourceElectiveId) {
-  draggedIndex[sourceElectiveId] = null;
-  dragOverIndex[sourceElectiveId] = null;
+function updatePriorities(sourceId) {
+  const grp = groupsData[sourceId];
+  grp.requests.forEach((r, i) => (r.priority = i + 1));
+  const payload = grp.requests.map(r => ({ id: r.id, priority: r.priority }));
+  axiosInstance.post('/transfer/reorder', payload).catch(console.error);
 }
 
-// Обновляем приоритет на сервере
-function updatePriorities(sourceElectiveId) {
-  const group = groupsData[sourceElectiveId];
-  if (!group) return;
-  group.requests.forEach((r, idx) => {
-    r.priority = idx + 1;
-  });
-  const updatedPriorities = group.requests.map((r) => ({
-    id: r.id,
-    priority: r.priority,
-  }));
-  axiosInstance.post('/transfer/reorder', updatedPriorities)
-      .then(() =>
-          console.log(`Приоритеты обновлены для электив ID=${sourceElectiveId}`)
-      )
-      .catch((err) => console.error('Ошибка при reorder', err));
+async function toggleLock(sourceId) {
+  const ids = groupsData[sourceId].requests.map(r => r.id);
+  const url = lockedGroups[sourceId] ? '/transfer/unlock' : '/transfer/lock';
+  try {
+    await axiosInstance.post(url, { ids });
+    await fetchRequests();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-// Когда дочерний RequestCard сэмитил `request-canceled`
-// Удаляем заявку из userRequests, затем пересобираем groupsData
 function onRequestCanceled(id) {
-  userRequests.value = userRequests.value.filter((r) => r.id !== id);
+  userRequests.value = userRequests.value.filter(r => r.id !== id);
   buildGroups();
 }
 </script>
@@ -271,49 +215,63 @@ function onRequestCanceled(id) {
   box-sizing: border-box;
 }
 
-.main-request-card {
-  border: none;
-  background: transparent !important; /* Прозрачный фон */
-  box-shadow: none !important; /* Убираем тень */
-}
-
 .header-section {
-  margin: 0 auto;
+  text-align: left;
+  margin-bottom: 24px;
 }
 
 .requests-title {
-  font-weight: 600;
-  font-size: 1.5rem;
-  color: #2c2c2c;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  font-size: 37px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.main-request-card {
+  border: none;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .source-section {
   margin-bottom: 24px;
   padding: 16px;
-  background: transparent; /* Прозрачный фон */
-  box-shadow: none !important; /* Убираем тень */
+  background: white;
+  border-radius: 8px;
+}
+
+.source-section.locked-group .interactive-area {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .group-header {
-  padding: 8px 0;
-  margin-bottom: 16px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1); /* Полупрозрачная граница */
+  border-radius: 8px 8px 0 0;
+  padding: 12px 16px;
+  background-color: transparent !important;
+  border-radius: 8px 8px 0 0;
+  padding: 12px 16px;
 }
 
 .source-title {
-  font-size: 1.2rem;
+  font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: rgba(0, 0, 0, 0.8);
+  margin: 0;
+}
+
+.drag-hint {
+  font-size: 14px;
+  color: #616161;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .request-card-wrapper {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   border-radius: 8px;
   overflow: hidden;
-  background: transparent !important; /* Прозрачный фон */
+  background: transparent !important;
 }
 
 .request-card-wrapper:hover {
@@ -338,32 +296,24 @@ function onRequestCanceled(id) {
 }
 
 .interactive-area {
-  background-color: #e4e4e4; /* Светло-серый фон */
-  border-radius: 8px; /* Скругленные углы */
-  padding: 16px; /* Внутренний отступ */
-  margin-top: 8px; /* Отступ сверху */
+  background-color: #fafafa;
+  border-radius: 0 0 8px 8px;
+  padding: 16px;
+  margin-top: -1px;
 }
 
-/* Стиль для подсказки "Меняйте приоритет..." */
-.drag-hint {
-  font-size: 14px; /* Размер шрифта */
-  color: #9e9e9e; /* Серый цвет текста */
-  text-align: center; /* Выравнивание по центру */
-  margin-bottom: 8px; /* Отступ снизу */
+.v-btn[outlined] {
+  font-weight: 600;
+  text-transform: none;
 }
 
-/* Адаптация для мобильных */
 @media (max-width: 600px) {
-  .requests-container {
-    padding: 10px;
-  }
-
-  .header-section {
-    padding: 12px 0;
-  }
-
   .requests-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
+  }
+
+  .source-title {
+    font-size: 1.2rem;
   }
 }
 </style>

@@ -5,16 +5,16 @@
     <div class="card-content">
       <!-- Header -->
       <div class="card-header">
-        <div class="status-chip" :class="statusClass(req.status)">
-          {{ req.status }}
+        <div class="status-chip" :class="statusClass">
+          {{ displayStatus }}
         </div>
 
         <v-btn
-            v-if="showCancel"
-            icon
-            @click.stop="cancelRequest"
-            class="cancel-btn"
-            size="x-small"
+          v-if="canCancel"
+          icon
+          @click.stop="cancelRequest"
+          class="cancel-btn"
+          size="x-small"
         >
           <v-icon color="error">mdi-close-circle</v-icon>
         </v-btn>
@@ -22,7 +22,8 @@
 
       <!-- Body -->
       <div class="card-body">
-        <div class="priority" v-if="req.status === 'Ожидается'">
+        <!-- Показываем приоритет для draft/pending -->
+        <div class="priority" v-if="showPriority">
           <v-icon small color="primary">mdi-sort-numeric-ascending</v-icon>
           <span class="text-primary">{{ req.priority }}</span>
         </div>
@@ -35,77 +36,84 @@
       </div>
 
       <!-- Groups -->
-      <div class="groups-section">
+      <div class="groups-section" v-if="Array.isArray(req.selectedGroups) && req.selectedGroups.length">
         <v-chip
-            v-for="(gr, idx) in req.selectedGroups"
-            :key="idx"
-            :color="groupTypeColor(gr.type)"
-            size="small"
-            class="group-chip"
+          v-for="(gr, idx) in req.selectedGroups"
+          :key="idx"
+          :color="groupTypeColor(gr.type)"
+          size="small"
+          class="group-chip"
         >
           <v-icon start small>mdi-account-group</v-icon>
           {{ gr.type }}: {{ gr.name }}
         </v-chip>
+      </div>
+      <div v-else class="text-caption grey--text">
+        Группы не выбраны
       </div>
     </div>
   </v-card>
 </template>
 
 <script setup>
-/* eslint-disable */
 import { computed } from 'vue';
 import axiosInstance from '@/axios/axios';
 
 const props = defineProps({
-  req: {
-    type: Object,
-    required: true,
-  },
+  req: { type: Object, required: true },
 });
-
 const emit = defineEmits(['request-canceled']);
 
-// Показываем иконку "отменить", если статус — "Ожидается"
-const showCancel = computed(() => props.req.status === 'Ожидается');
+// Можно отменить только draft и pending
+const canCancel = computed(() => ['draft'].includes(props.req.status));
 
-// Класс статуса для стилизации текста
-const statusClass = (status) => {
-  switch (status) {
-    case 'Ожидается':
-      return 'status-pending';
-    case 'Одобрено':
-      return 'status-approved';
-    case 'Отклонено':
-      return 'status-rejected';
-    default:
-      return '';
+// Приоритет виден для draft и pending
+const showPriority = computed(() => ['draft','pending'].includes(props.req.status));
+
+// Статус по-русски
+const displayStatus = computed(() => {
+  switch (props.req.status) {
+    case 'draft':   return 'Черновик';
+    case 'pending': return 'Ожидается';
+    case 'approved':return 'Одобрено';
+    case 'rejected':return 'Отклонено';
+    default:        return props.req.status;
   }
-};
+});
 
-// Цвет для v-chip типа группы
+// CSS-класс по-статусу
+const statusClass = computed(() => {
+  switch (props.req.status) {
+    case 'draft':   return 'status-draft';
+    case 'pending': return 'status-pending';
+    case 'approved':return 'status-approved';
+    case 'rejected':return 'status-rejected';
+    default:        return '';
+  }
+});
+
+// Цвет для чипов групп
 const groupTypeColor = (type) => {
-  const lower = type.toLowerCase();
-  if (lower.includes('лекц')) return 'indigo darken-2';
-  if (lower.includes('практ')) return 'teal darken-2';
-  if (lower.includes('лаб')) return 'orange darken-2';
-  return 'purple darken-2';
+  const lower = (type || '').toLowerCase();
+  if (lower.includes('лекц'))      return 'green darken-2';   // Лекции — зелёный
+  if (lower.includes('практ'))     return 'blue darken-2';    // Практики — синий
+  if (lower.includes('лаб'))       return 'orange darken-2';  // Лабораторные — оранжевый
+  return 'grey darken-1';                                  // Остальные — серый
 };
 
-// Удаление заявки (DELETE)
+// Отмена заявки
 const cancelRequest = async () => {
-  if (!props.req.id) {
-    console.error('Не удалось отменить заявку: отсутствует req.id');
+  const id = props.req.id;
+  if (!id) {
+    console.error('Нет req.id для отмены');
     return;
   }
   try {
-    // DELETE /api/requests/:id
-    await axiosInstance.delete(`/transfer/${props.req.id}`);
-
-    // Говорим родителю «я удалена»
-    emit('request-canceled', props.req.id);
+    await axiosInstance.delete(`/transfer/${id}`);
+    emit('request-canceled', id);
   } catch (err) {
-    console.error('Ошибка при отмене заявки:', err);
-    alert('Не удалось отменить заявку. Попробуйте позже.');
+    console.error('Ошибка отмены заявки:', err);
+    alert('Не удалось отменить заявку.');
   }
 };
 </script>
@@ -152,6 +160,12 @@ const cancelRequest = async () => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   flex-shrink: 0;
+}
+
+.status-draft {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
 }
 
 .status-pending {
@@ -209,9 +223,9 @@ const cancelRequest = async () => {
   font-size: 14px;
   font-weight: 500;
   text-overflow: ellipsis;
-  white-space: normal; /* Разрешаем перенос строк */
-  word-wrap: break-word; /* Перенос длинных слов */
-  min-width: 0; /* Исправление для flex-элементов */
+  white-space: normal;
+  word-wrap: break-word;
+  min-width: 0;
   border: 1px solid #e9ecef;
 }
 
@@ -241,7 +255,6 @@ const cancelRequest = async () => {
   font-size: 14px;
 }
 
-/* Scrollbar styling */
 .groups-section::-webkit-scrollbar {
   width: 6px;
 }
@@ -260,7 +273,6 @@ const cancelRequest = async () => {
   background: #9e9e9e;
 }
 
-/* Mobile adaptation */
 @media (max-width: 600px) {
   .request-card {
     height: 260px;
